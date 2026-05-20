@@ -142,6 +142,11 @@ p {
   box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.52), 0 0 34px rgba(255, 255, 255, 0.28);
 }
 
+.pad.active .pad-shape {
+  opacity: 0.8;
+  transform: scale(1.08) rotate(5deg);
+}
+
 .pad.learn-target {
   outline: 5px solid var(--ring);
   outline-offset: -10px;
@@ -175,7 +180,22 @@ p {
 .pad-name,
 .pad-note {
   position: relative;
+  z-index: 2;
+}
+
+.pad-shape {
+  position: absolute;
   z-index: 1;
+  left: 50%;
+  top: 50%;
+  width: min(56%, 220px);
+  height: min(56%, 220px);
+  object-fit: contain;
+  opacity: 0.42;
+  translate: -50% -50%;
+  filter: brightness(0) invert(1) drop-shadow(0 10px 22px rgba(0, 0, 0, 0.28));
+  pointer-events: none;
+  transition: opacity 140ms ease, transform 140ms ease;
 }
 
 .pad-name {
