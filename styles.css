@@ -257,6 +257,13 @@ p {
   color: rgba(255, 255, 255, 0.92);
   font-size: 0.86rem;
   font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+}
+
+.board.is-learning .pad-note {
+  opacity: 1;
 }
 
 .center-panel {

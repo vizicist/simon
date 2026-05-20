@@ -7,6 +7,7 @@ const connectButton = document.querySelector("#connect");
 const learnButton = document.querySelector("#learn");
 const startButton = document.querySelector("#start");
 const resetButton = document.querySelector("#reset");
+const boardEl = document.querySelector(".board");
 const inputSelect = document.querySelector("#midi-input");
 const midiStateEl = document.querySelector("#midi-state");
 const resultOverlay = document.querySelector("#result-overlay");
@@ -65,6 +66,7 @@ const state = {
 bestEl.textContent = state.best;
 renderMappings();
 setStartupMessage();
+syncLearningDisplay();
 autoConnectMidi();
 
 connectButton.addEventListener("click", connectMidi);
@@ -232,8 +234,10 @@ function startLearning() {
   state.playingBack = false;
   state.sequence = [];
   updateRound();
+  boardEl.classList.add("is-learning");
   pads.forEach((pad) => pad.classList.remove("learn-target"));
   learnButton.textContent = "Done";
+  syncLearningDisplay();
   setMessage("Pick a pad", "Tap an on-screen color, then strike the matching Bop Pad pad.");
 }
 
@@ -285,6 +289,7 @@ function finishLearning() {
   state.learnTarget = null;
   pads.forEach((pad) => pad.classList.remove("learn-target", "learned"));
   learnButton.textContent = "Learn Pads";
+  syncLearningDisplay();
   if (isValidPadNotes(state.padNotes)) {
     savePadNotes();
     setMessage("Pads saved", "This mapping will load automatically after future reloads.");
@@ -301,6 +306,7 @@ function startGame() {
   state.learnTarget = null;
   pads.forEach((pad) => pad.classList.remove("learn-target", "learned"));
   learnButton.textContent = "Learn Pads";
+  syncLearningDisplay();
   state.sequence = [];
   state.playerIndex = 0;
   state.acceptingInput = false;
@@ -324,6 +330,7 @@ function resetGame() {
   state.correctSteps = 0;
   pads.forEach((pad) => pad.classList.remove("learn-target", "learned"));
   learnButton.textContent = "Learn Pads";
+  syncLearningDisplay();
   updateRound();
   setStartupMessage();
 }
@@ -433,6 +440,10 @@ function showResult(steps, elapsedMs, isNewBest) {
 
 function hideResult() {
   resultOverlay.hidden = true;
+}
+
+function syncLearningDisplay() {
+  boardEl.classList.toggle("is-learning", state.learning);
 }
 
 function formatElapsed(ms) {
