@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bop Pad Simon</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app" aria-labelledby="title">
+      <section class="stage">
+        <div class="status-bar">
+          <div>
+            <h1 id="title">Bop Pad Simon</h1>
+            <p id="subtitle">Connect your MIDI device, learn the four pads, then repeat the pattern.</p>
+          </div>
+          <div class="scoreboard" aria-live="polite">
+            <span>Round <strong id="round">0</strong></span>
+            <span>Best <strong id="best">0</strong></span>
+          </div>
+        </div>
+
+        <div class="board" aria-label="Simon pads">
+          <button class="pad pad-green" data-pad="0" aria-label="Green pad">
+            <span class="pad-name">Green</span>
+            <span class="pad-note" id="note-0">unmapped</span>
+          </button>
+          <button class="pad pad-red" data-pad="1" aria-label="Red pad">
+            <span class="pad-name">Red</span>
+            <span class="pad-note" id="note-1">unmapped</span>
+          </button>
+          <button class="pad pad-yellow" data-pad="2" aria-label="Yellow pad">
+            <span class="pad-name">Yellow</span>
+            <span class="pad-note" id="note-2">unmapped</span>
+          </button>
+          <button class="pad pad-blue" data-pad="3" aria-label="Blue pad">
+            <span class="pad-name">Blue</span>
+            <span class="pad-note" id="note-3">unmapped</span>
+          </button>
+          <div class="center-panel">
+            <span id="message">Ready</span>
+          </div>
+        </div>
+
+        <div class="controls" aria-label="Game controls">
+          <button id="connect" type="button">Connect MIDI</button>
+          <button id="learn" type="button">Learn Pads</button>
+          <button id="start" type="button">Start</button>
+          <button id="reset" type="button" title="Stop the current run. Saved pad mappings and best score stay saved.">Reset</button>
+        </div>
+
+        <div class="midi-panel">
+          <label for="midi-input">MIDI input</label>
+          <select id="midi-input"></select>
+          <span id="midi-state">Web MIDI not connected</span>
+        </div>
+      </section>
+
+      <section class="result-overlay" id="result-overlay" aria-labelledby="result-title" aria-modal="true" role="dialog" hidden>
+        <div class="result-dialog">
+          <p class="result-kicker">Run complete</p>
+          <h2 id="result-title">Missed</h2>
+          <div class="result-stats" aria-label="Game result">
+            <span>
+              <strong id="result-steps">0</strong>
+              steps
+            </span>
+            <span>
+              <strong id="result-time">0:00</strong>
+              time
+            </span>
+          </div>
+          <p id="result-detail">Press Start to play again.</p>
+          <div class="result-actions">
+            <button id="result-start" type="button">Start Again</button>
+            <button id="result-close" type="button">Close</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
