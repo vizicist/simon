@@ -323,6 +323,7 @@ p {
   font-weight: 700;
   line-height: 0.95;
   text-wrap: balance;
+  transform: translateY(-6vh);
 }
 
 .countdown-beat {
