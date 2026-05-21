@@ -157,12 +157,6 @@ async function connectMidi() {
     state.access = await navigator.requestMIDIAccess({ sysex: false });
     state.access.addEventListener("statechange", refreshInputs);
     refreshInputs();
-    setMessage(
-      "MIDI ready",
-      state.hasSavedMapping
-        ? "Saved Bop Pad mapping loaded. Press Start."
-        : "Choose the Bop Pad input, learn pads if needed, then start.",
-    );
   } catch (error) {
     setMessage("MIDI blocked", "Allow MIDI permission in the browser and try again.");
     midiStateEl.textContent = error.message;
