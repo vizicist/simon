@@ -423,7 +423,7 @@ async function playSequence(runId) {
 
     const stepDurationMs = getSequenceStepDurationMs();
     flashPad(pad, 96, stepDurationMs);
-    playMechanicalSound(pad, 96, stepDurationMs);
+    playMechanicalSound(pad, 96);
     await wait(stepDurationMs);
   }
 
@@ -874,7 +874,7 @@ function missPad(index) {
   window.setTimeout(() => pads[index].classList.remove("miss"), 280);
 }
 
-function playMechanicalSound(index, velocity = 96, durationMs = 1000) {
+function playMechanicalSound(index, velocity = 96) {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   if (!AudioContext) {
     return;
@@ -887,38 +887,32 @@ function playMechanicalSound(index, velocity = 96, durationMs = 1000) {
   }
 
   const voices = [
-    { base: 150, overtones: [1.5, 2.98, 4.07], pan: -0.42, filter: 980 },
-    { base: 188, overtones: [1.33, 2.66, 5.12], pan: 0.42, filter: 1240 },
-    { base: 122, overtones: [1.78, 3.11, 4.93], pan: -0.18, filter: 860 },
-    { base: 226, overtones: [1.41, 2.87, 4.24], pan: 0.18, filter: 1420 },
+    { notes: [523.25, 659.25, 783.99], pan: -0.42 },
+    { notes: [659.25, 830.61, 987.77], pan: 0.42 },
+    { notes: [587.33, 739.99, 880], pan: -0.18 },
+    { notes: [783.99, 987.77, 1174.66], pan: 0.18 },
   ];
   const voice = voices[index];
   const now = context.currentTime;
-  const durationSeconds = Math.min(1, Math.max(0.25, durationMs / 1000));
+  const durationSeconds = 0.25;
   const releaseTime = now + durationSeconds;
-  const level = 0.18 + (velocity / 127) * 0.32;
+  const level = 0.16 + (velocity / 127) * 0.24;
   const master = context.createGain();
   const compressor = context.createDynamicsCompressor();
   const filter = context.createBiquadFilter();
-  const noiseFilter = context.createBiquadFilter();
   const panner = context.createStereoPanner ? context.createStereoPanner() : null;
 
-  compressor.threshold.setValueAtTime(-18, now);
-  compressor.knee.setValueAtTime(10, now);
-  compressor.ratio.setValueAtTime(7, now);
-  compressor.attack.setValueAtTime(0.003, now);
-  compressor.release.setValueAtTime(0.16, now);
-  filter.type = "lowpass";
-  filter.frequency.setValueAtTime(voice.filter, now);
-  filter.frequency.exponentialRampToValueAtTime(voice.filter * 0.56, now + durationSeconds * 0.95);
-  filter.Q.setValueAtTime(7, now);
-  noiseFilter.type = "bandpass";
-  noiseFilter.frequency.setValueAtTime(voice.filter * 1.25, now);
-  noiseFilter.Q.setValueAtTime(5, now);
+  compressor.threshold.setValueAtTime(-12, now);
+  compressor.knee.setValueAtTime(18, now);
+  compressor.ratio.setValueAtTime(3, now);
+  compressor.attack.setValueAtTime(0.002, now);
+  compressor.release.setValueAtTime(0.08, now);
+  filter.type = "highpass";
+  filter.frequency.setValueAtTime(240, now);
+  filter.Q.setValueAtTime(0.7, now);
   master.gain.setValueAtTime(0.0001, now);
-  master.gain.exponentialRampToValueAtTime(level, now + 0.018);
-  master.gain.exponentialRampToValueAtTime(level * 0.72, now + durationSeconds * 0.28);
-  master.gain.exponentialRampToValueAtTime(level * 0.34, now + durationSeconds * 0.82);
+  master.gain.exponentialRampToValueAtTime(level, now + 0.01);
+  master.gain.exponentialRampToValueAtTime(level * 0.62, now + 0.08);
   master.gain.exponentialRampToValueAtTime(0.0001, releaseTime);
 
   const output = panner || context.destination;
@@ -928,49 +922,45 @@ function playMechanicalSound(index, velocity = 96, durationMs = 1000) {
   }
   master.connect(filter).connect(compressor).connect(output);
 
-  [1, ...voice.overtones].forEach((ratio, overtoneIndex) => {
+  voice.notes.forEach((frequency, noteIndex) => {
     const oscillator = context.createOscillator();
-    const overtoneGain = context.createGain();
-    oscillator.type = overtoneIndex === 0 ? "square" : "sawtooth";
-    oscillator.frequency.setValueAtTime(voice.base * ratio, now);
-    oscillator.frequency.exponentialRampToValueAtTime(voice.base * ratio * 0.92, now + durationSeconds * 0.95);
-    overtoneGain.gain.setValueAtTime(overtoneIndex === 0 ? 1 : 0.42 / overtoneIndex, now);
-    oscillator.connect(overtoneGain).connect(master);
-    oscillator.start(now);
-    oscillator.stop(releaseTime + 0.04);
+    const noteGain = context.createGain();
+    const startOffset = noteIndex * 0.028;
+    const noteStart = now + startOffset;
+    const noteEnd = Math.min(releaseTime + 0.02, noteStart + 0.22);
+    oscillator.type = noteIndex === 0 ? "triangle" : "sine";
+    oscillator.frequency.setValueAtTime(frequency, noteStart);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.006, noteEnd);
+    noteGain.gain.setValueAtTime(0.0001, noteStart);
+    noteGain.gain.exponentialRampToValueAtTime(noteIndex === 0 ? 1 : 0.62, noteStart + 0.012);
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, noteEnd);
+    oscillator.connect(noteGain).connect(master);
+    oscillator.start(noteStart);
+    oscillator.stop(noteEnd + 0.02);
   });
 
-  const bufferSize = Math.floor(context.sampleRate * durationSeconds * 0.95);
-  const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i += 1) {
-    const decay = 1 - i / bufferSize;
-    const chatter = Math.sin(i * 0.33) > 0.15 ? 1 : 0.42;
-    data[i] = (Math.random() * 2 - 1) * decay * chatter;
-  }
+  const sparkle = context.createOscillator();
+  const sparkleGain = context.createGain();
+  sparkle.type = "sine";
+  sparkle.frequency.setValueAtTime(voice.notes[2] * 2, now + 0.04);
+  sparkleGain.gain.setValueAtTime(0.0001, now + 0.04);
+  sparkleGain.gain.exponentialRampToValueAtTime(level * 0.58, now + 0.06);
+  sparkleGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.19);
+  sparkle.connect(sparkleGain).connect(compressor);
+  sparkle.start(now + 0.04);
+  sparkle.stop(now + 0.21);
 
-  const noise = context.createBufferSource();
-  const noiseGain = context.createGain();
-  noise.buffer = buffer;
-  noiseGain.gain.setValueAtTime(level * 0.82, now);
-  noiseGain.gain.exponentialRampToValueAtTime(level * 0.28, now + durationSeconds * 0.42);
-  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSeconds * 0.95);
-  noise.connect(noiseFilter).connect(noiseGain).connect(compressor);
-  noise.start(now);
-  noise.stop(releaseTime);
-
-  const tickCount = Math.max(2, Math.round(durationSeconds / 0.18));
-  for (let tick = 0; tick < tickCount; tick += 1) {
+  for (let tick = 0; tick < 2; tick += 1) {
     const click = context.createOscillator();
     const clickGain = context.createGain();
-    const clickTime = now + tick * (durationSeconds / tickCount);
-    click.type = "square";
-    click.frequency.setValueAtTime(voice.filter * (1.7 - tick * 0.08), clickTime);
-    clickGain.gain.setValueAtTime(level * 0.48, clickTime);
-    clickGain.gain.exponentialRampToValueAtTime(0.0001, clickTime + 0.045);
+    const clickTime = now + tick * 0.085;
+    click.type = "triangle";
+    click.frequency.setValueAtTime(voice.notes[1] * (1.5 + tick * 0.25), clickTime);
+    clickGain.gain.setValueAtTime(level * 0.22, clickTime);
+    clickGain.gain.exponentialRampToValueAtTime(0.0001, clickTime + 0.025);
     click.connect(clickGain).connect(compressor);
     click.start(clickTime);
-    click.stop(clickTime + 0.055);
+    click.stop(clickTime + 0.035);
   }
 }
 
