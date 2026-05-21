@@ -808,15 +808,11 @@ function renderAchievements() {
     rank.className = "achievement-rank";
     rank.textContent = `#${index + 1}`;
 
-    const steps = document.createElement("strong");
-    steps.className = "achievement-steps";
-    steps.textContent = `${achievement.steps} steps`;
+    const result = document.createElement("strong");
+    result.className = "achievement-result";
+    result.textContent = `${formatStepCount(achievement.steps)} in ${formatElapsedSeconds(achievement.elapsedMs)}`;
 
-    const time = document.createElement("span");
-    time.className = "achievement-time";
-    time.textContent = formatElapsed(achievement.elapsedMs);
-
-    item.append(rank, steps, time);
+    item.append(rank, result);
     achievementList.append(item);
   });
 }
@@ -939,6 +935,15 @@ function formatElapsed(ms) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatElapsedSeconds(ms) {
+  const seconds = Math.max(0, Math.round(ms / 1000));
+  return `${seconds} ${seconds === 1 ? "second" : "seconds"}`;
+}
+
+function formatStepCount(steps) {
+  return `${steps} ${steps === 1 ? "step" : "steps"}`;
 }
 
 function createCountdownOverlay() {

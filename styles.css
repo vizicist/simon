@@ -664,7 +664,7 @@ p {
 
 .achievement-list li {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   gap: 10px;
   align-items: center;
   min-height: 34px;
@@ -680,18 +680,11 @@ p {
   font-weight: 400;
 }
 
-.achievement-time {
-  color: var(--muted);
-  font-size: clamp(0.82rem, 1.8vw, 1.04rem);
-  font-weight: 400;
-  line-height: 1;
-}
-
-.achievement-steps {
+.achievement-result {
   color: var(--text);
   font-size: clamp(1.15rem, 3.2vw, 2rem);
   font-weight: 700;
-  text-transform: uppercase;
+  line-height: 1;
 }
 
 .achievement-empty {
