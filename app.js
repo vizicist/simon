@@ -776,7 +776,7 @@ function syncLearningDisplay() {
 
 function updateStartButton() {
   startButton.textContent = state.gameActive && state.lastStartMode === "ritual"
-    ? "Restart Ritual to Access Recorded Messages"
+    ? "Restart Ritual"
     : "Start Ritual to Access Recorded Messages";
   hallOfFameChallengeButton.textContent = state.gameActive && state.lastStartMode === "challenge"
     ? "Restart Hall of Fame Challenge"
