@@ -17,6 +17,7 @@ const resultTitleEl = document.querySelector("#result-title");
 const resultStepsEl = document.querySelector("#result-steps");
 const resultTimeEl = document.querySelector("#result-time");
 const resultDetailEl = document.querySelector("#result-detail");
+const resultActionsEl = document.querySelector(".result-dialog .result-actions");
 const resultStartButton = document.querySelector("#result-start");
 const resultCloseButton = document.querySelector("#result-close");
 const resultAchievementsButton = document.querySelector("#result-achievements");
@@ -512,6 +513,9 @@ function showResult(steps, elapsedMs, achieved) {
     ? "The sigil sequence reached its chosen goal."
     : "";
   resultStartButton.textContent = achieved ? "Start Again" : "Try Again";
+  resultActionsEl.classList.toggle("is-single", !achieved);
+  resultAchievementsButton.hidden = !achieved;
+  resultCloseButton.hidden = !achieved;
   sigilMessagePanel.hidden = !achieved;
   resultOverlay.hidden = false;
 }

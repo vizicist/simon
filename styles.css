@@ -480,6 +480,10 @@ p {
   margin-top: 24px;
 }
 
+.result-actions.is-single {
+  grid-template-columns: 1fr;
+}
+
 .achievements-panel .result-actions {
   grid-template-columns: 1fr;
 }
