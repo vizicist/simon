@@ -293,14 +293,6 @@ p {
   text-wrap: balance;
 }
 
-.countdown-goal {
-  color: var(--text);
-  font-size: clamp(1.35rem, 4vw, 3.3rem);
-  font-weight: 900;
-  line-height: 1.05;
-  text-wrap: balance;
-}
-
 .countdown-beat {
   color: var(--yellow);
   font-size: clamp(4rem, 18vw, 13rem);
