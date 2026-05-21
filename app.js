@@ -444,25 +444,11 @@ async function playSequence(runId) {
 }
 
 async function runStartCountdown(runId) {
-  if (state.startCountdown === 0) {
-    return;
-  }
-
-  const beats = Array.from(
-    { length: state.startCountdown },
-    (_, index) => String(state.startCountdown - index),
-  );
-  beats.push("GO");
   const countdownOverlay = createCountdownOverlay();
-
-  for (const beat of beats) {
-    if (runId !== state.runId) {
-      countdownOverlay.remove();
-      return;
-    }
-
-    countdownOverlay.querySelector(".countdown-beat").textContent = beat;
-    await wait(beat === "GO" ? 650 : 850);
+  await wait(3000);
+  if (runId !== state.runId) {
+    countdownOverlay.remove();
+    return;
   }
 
   countdownOverlay.remove();
@@ -873,12 +859,9 @@ function createCountdownOverlay() {
 
   const message = document.createElement("span");
   message.className = "countdown-message";
-  message.textContent = "Match the Sigil Sequence";
+  message.textContent = "Match the Sequence";
 
-  const beat = document.createElement("strong");
-  beat.className = "countdown-beat";
-
-  overlay.append(message, beat);
+  overlay.append(message);
   document.body.append(overlay);
   return overlay;
 }

@@ -473,6 +473,13 @@ p {
   text-wrap: balance;
 }
 
+#result-title {
+  font-size: clamp(1.45rem, 7.2vw, 5.8rem);
+  overflow-wrap: normal;
+  text-wrap: nowrap;
+  white-space: nowrap;
+}
+
 .result-stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
