@@ -58,6 +58,8 @@ const playback = {
   litMs: 1000,
 };
 
+const responseTimeoutMs = 6000;
+
 const advancedAccess = {
   taps: 0,
   requiredTaps: 4,
@@ -89,6 +91,7 @@ const state = {
   learnedPads: new Set(),
   runId: 0,
   nextRoundTimer: null,
+  responseTimeoutTimer: null,
   startedAt: null,
   correctSteps: 0,
   best: Number(localStorage.getItem(storageKeys.best) || 0),
@@ -381,6 +384,7 @@ function resetGame() {
 }
 
 function addRound() {
+  cancelResponseTimeout();
   state.sequence.push(Math.floor(Math.random() * 4));
   state.playerIndex = 0;
   state.acceptingInput = false;
@@ -389,6 +393,7 @@ function addRound() {
 }
 
 async function playSequence(runId) {
+  cancelResponseTimeout();
   state.playingBack = true;
   learnButton.disabled = true;
 
@@ -410,6 +415,7 @@ async function playSequence(runId) {
   state.playingBack = false;
   state.acceptingInput = true;
   learnButton.disabled = false;
+  startResponseTimeout(runId);
 }
 
 async function runStartCountdown(runId) {
@@ -444,10 +450,12 @@ function handlePad(padIndex, velocity = 96) {
   const expected = state.sequence[state.playerIndex];
   if (padIndex !== expected) {
     missPad(padIndex);
+    cancelResponseTimeout();
     endGame();
     return;
   }
 
+  cancelResponseTimeout();
   state.correctSteps += 1;
   state.playerIndex += 1;
   if (state.playerIndex === state.sequence.length) {
@@ -458,10 +466,14 @@ function handlePad(padIndex, velocity = 96) {
     }
 
     state.nextRoundTimer = setTimeout(addRound, 680);
+    return;
   }
+
+  startResponseTimeout(state.runId);
 }
 
 function endGame(achieved = false) {
+  cancelResponseTimeout();
   state.acceptingInput = false;
   state.gameActive = false;
   updateStartButton();
@@ -872,6 +884,29 @@ function cancelPendingRound() {
     state.nextRoundTimer = null;
   }
 
+  cancelResponseTimeout();
   startButton.disabled = false;
   learnButton.disabled = false;
+}
+
+function startResponseTimeout(runId) {
+  cancelResponseTimeout();
+  state.responseTimeoutTimer = window.setTimeout(() => {
+    state.responseTimeoutTimer = null;
+    if (runId !== state.runId || !state.gameActive || !state.acceptingInput) {
+      return;
+    }
+
+    state.acceptingInput = false;
+    endGame();
+  }, responseTimeoutMs);
+}
+
+function cancelResponseTimeout() {
+  if (!state.responseTimeoutTimer) {
+    return;
+  }
+
+  clearTimeout(state.responseTimeoutTimer);
+  state.responseTimeoutTimer = null;
 }
