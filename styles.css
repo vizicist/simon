@@ -359,6 +359,8 @@ p {
 
 #start {
   grid-column: 1 / -1;
+  font-size: clamp(1.45rem, 2.8vw, 2.15rem);
+  min-height: 70px;
 }
 
 .controls button:hover,
@@ -716,10 +718,6 @@ select {
 
   .controls {
     grid-template-columns: 1fr;
-  }
-
-  #start {
-    font-size: clamp(0.95rem, 4vw, 1.2rem);
   }
 
   .midi-panel,
