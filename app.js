@@ -13,6 +13,7 @@ const inputSelect = document.querySelector("#midi-input");
 const sequenceGoalSelect = document.querySelector("#sequence-goal");
 const sequenceTimingInput = document.querySelector("#sequence-timing");
 const sequenceTimingValue = document.querySelector("#sequence-timing-value");
+const startCountdownSelect = document.querySelector("#start-countdown");
 const midiStateEl = document.querySelector("#midi-state");
 const resultOverlay = document.querySelector("#result-overlay");
 const resultTitleEl = document.querySelector("#result-title");
@@ -75,6 +76,7 @@ const storageKeys = {
   notes: "bop-pad-simon-notes",
   sequenceGoal: "sigil-sequence-goal",
   sequenceTiming: "sigil-sequence-timing",
+  startCountdown: "sigil-sequence-start-countdown",
 };
 
 localStorage.removeItem("sigil-sequence-achievements");
@@ -105,6 +107,7 @@ const state = {
   sequenceGoal: loadSequenceGoal(),
   activeSequenceGoal: ritualGoalSteps,
   sequenceTiming: loadSequenceTiming(),
+  startCountdown: loadStartCountdown(),
   recordHallOfFame: false,
   lastStartMode: "ritual",
   lastRunAchieved: false,
@@ -117,6 +120,7 @@ if (bestEl) {
 renderMappings();
 renderSequenceGoal();
 renderSequenceTiming();
+renderStartCountdown();
 syncLearningDisplay();
 autoConnectMidi();
 
@@ -130,6 +134,7 @@ if (resetButton) {
 inputSelect.addEventListener("change", selectMidiInput);
 sequenceGoalSelect.addEventListener("change", updateSequenceGoal);
 sequenceTimingInput.addEventListener("input", updateSequenceTiming);
+startCountdownSelect.addEventListener("change", updateStartCountdownSetting);
 resultStartButton.addEventListener("click", handleResultStart);
 resultCloseButton.addEventListener("click", hideResult);
 resultAchievementsButton.addEventListener("click", showAchievementsPage);
@@ -437,7 +442,15 @@ async function playSequence(runId) {
 }
 
 async function runStartCountdown(runId) {
-  const beats = ["5", "4", "3", "2", "1", "GO"];
+  if (state.startCountdown === 0) {
+    return;
+  }
+
+  const beats = Array.from(
+    { length: state.startCountdown },
+    (_, index) => String(state.startCountdown - index),
+  );
+  beats.push("GO");
   const countdownOverlay = createCountdownOverlay();
 
   for (const beat of beats) {
@@ -653,12 +666,26 @@ function renderSequenceTiming() {
   sequenceTimingValue.textContent = `${state.sequenceTiming.toFixed(2)}s`;
 }
 
+function updateStartCountdownSetting() {
+  state.startCountdown = normalizeStartCountdown(startCountdownSelect.value);
+  localStorage.setItem(storageKeys.startCountdown, String(state.startCountdown));
+  renderStartCountdown();
+}
+
+function renderStartCountdown() {
+  startCountdownSelect.value = String(state.startCountdown);
+}
+
 function loadSequenceGoal() {
   return normalizeSequenceGoal(localStorage.getItem(storageKeys.sequenceGoal) || "unlimited");
 }
 
 function loadSequenceTiming() {
   return normalizeSequenceTiming(localStorage.getItem(storageKeys.sequenceTiming) || "1");
+}
+
+function loadStartCountdown() {
+  return normalizeStartCountdown(localStorage.getItem(storageKeys.startCountdown) || "3");
 }
 
 function normalizeSequenceGoal(value) {
@@ -681,6 +708,15 @@ function normalizeSequenceTiming(value) {
   }
 
   return 1;
+}
+
+function normalizeStartCountdown(value) {
+  const numericValue = Number(value);
+  if (Number.isInteger(numericValue) && numericValue >= 0 && numericValue <= 6) {
+    return numericValue;
+  }
+
+  return 3;
 }
 
 function getSequenceStepDurationMs() {
