@@ -6,6 +6,7 @@ const connectButton = document.querySelector("#connect");
 const learnButton = document.querySelector("#learn");
 const startButton = document.querySelector("#start");
 const hallOfFameChallengeButton = document.querySelector("#hall-of-fame-challenge");
+const showHallOfFameButton = document.querySelector("#show-hall-of-fame");
 const advancedHotspot = document.querySelector("#advanced-hotspot");
 const resetButton = document.querySelector("#reset");
 const boardEl = document.querySelector(".board");
@@ -128,6 +129,7 @@ connectButton.addEventListener("click", connectMidi);
 learnButton.addEventListener("click", startLearning);
 startButton.addEventListener("click", () => startGame("ritual"));
 hallOfFameChallengeButton.addEventListener("click", () => startGame("challenge"));
+showHallOfFameButton.addEventListener("click", showAchievementsPage);
 if (resetButton) {
   resetButton.addEventListener("click", resetGame);
 }
@@ -776,11 +778,11 @@ function syncLearningDisplay() {
 
 function updateStartButton() {
   startButton.textContent = state.gameActive && state.lastStartMode === "ritual"
-    ? "Restart Ritual - Complete 8 Steps"
-    : "Start Ritual - Complete 8 Steps";
+    ? `Restart Ritual to Complete ${ritualGoalSteps} Steps`
+    : `Start Ritual to Complete ${ritualGoalSteps} Steps`;
   hallOfFameChallengeButton.textContent = state.gameActive && state.lastStartMode === "challenge"
     ? "Restart Hall of Fame Challenge"
-    : "Hall of Fame Challenge";
+    : "Start Hall of Fame Challenge";
 }
 
 function requestMainKioskOnce() {

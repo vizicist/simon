@@ -48,7 +48,7 @@ select {
 
 .stage {
   height: 100%;
-  width: min(980px, 100%);
+  width: min(1180px, 100%);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   align-items: center;
@@ -266,7 +266,11 @@ p {
   opacity: 1;
 }
 
-.controls,
+.controls {
+  width: min(1120px, 100%);
+  margin: clamp(8px, 2vh, 18px) auto 0;
+}
+
 .midi-panel {
   width: min(720px, 100%);
   margin: clamp(8px, 2vh, 18px) auto 0;
@@ -302,7 +306,7 @@ p {
 
 .controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(220px, 360px));
+  grid-template-columns: minmax(390px, 1.25fr) minmax(270px, 1fr) minmax(220px, 0.8fr);
   justify-content: center;
   gap: 10px;
 }
@@ -318,6 +322,10 @@ p {
   font-size: clamp(1.18rem, 2.1vw, 1.55rem);
   font-weight: 850;
   line-height: 1.08;
+}
+
+#start {
+  white-space: nowrap;
 }
 
 .controls button:hover,
@@ -668,6 +676,10 @@ select {
 
   .controls {
     grid-template-columns: 1fr;
+  }
+
+  #start {
+    font-size: clamp(0.95rem, 4vw, 1.2rem);
   }
 
   .midi-panel,
