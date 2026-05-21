@@ -27,7 +27,6 @@ const sigilMessagePanel = document.querySelector("#sigil-message-panel");
 const sigilMessageButtons = Array.from(document.querySelectorAll(".sigil-message-button"));
 const advancedPage = document.querySelector("#advanced-page");
 const advancedReturnButton = document.querySelector("#advanced-return");
-const advancedAchievementsButton = document.querySelector("#advanced-achievements");
 const achievementsPage = document.querySelector("#achievements-page");
 const achievementList = document.querySelector("#achievement-list");
 const achievementEmpty = document.querySelector("#achievement-empty");
@@ -138,7 +137,6 @@ sigilMessageButtons.forEach((button) => {
   button.addEventListener("click", () => playSigilMessage(button.dataset.sigil));
 });
 advancedReturnButton.addEventListener("click", hideAdvancedPage);
-advancedAchievementsButton.addEventListener("click", showAchievementsPage);
 achievementsCloseButton.addEventListener("click", hideAchievementsPage);
 advancedHotspot.addEventListener("click", handleAdvancedHotspot);
 window.addEventListener("pointerdown", requestMainKioskOnce, { once: true });
@@ -669,7 +667,7 @@ function normalizeSequenceGoal(value) {
   }
 
   const numericValue = Number(value);
-  if (Number.isInteger(numericValue) && numericValue >= 5 && numericValue <= 20) {
+  if (Number.isInteger(numericValue) && numericValue >= 3 && numericValue <= 20) {
     return numericValue;
   }
 

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sigil Sequence Ritual</title>
-    <link rel="stylesheet" href="styles.css?v=33">
+    <link rel="stylesheet" href="styles.css?v=34">
   </head>
   <body>
     <main class="app" aria-labelledby="title">
@@ -49,7 +49,6 @@
           <div class="advanced-actions" aria-label="Advanced controls">
             <button id="connect" type="button">Connect MIDI</button>
             <button id="learn" type="button">Learn Pads</button>
-            <button id="advanced-achievements" type="button">Sigil Sequence Hall of Fame</button>
           </div>
           <div class="midi-panel">
             <label for="midi-input">MIDI input</label>
@@ -59,6 +58,8 @@
           <div class="goal-panel">
             <label for="sequence-goal">Sequence Goal</label>
             <select id="sequence-goal">
+              <option value="3">3</option>
+              <option value="4">4</option>
               <option value="5">5</option>
               <option value="6">6</option>
               <option value="7">7</option>
@@ -138,6 +139,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=38"></script>
+    <script src="app.js?v=39"></script>
   </body>
 </html>

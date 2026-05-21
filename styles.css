@@ -374,10 +374,6 @@ p {
   gap: 10px;
 }
 
-.advanced-actions #advanced-achievements {
-  grid-column: 1 / -1;
-}
-
 .advanced-return {
   width: 100%;
   margin-top: 18px;
