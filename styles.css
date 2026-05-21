@@ -462,8 +462,40 @@ p {
   display: none;
 }
 
+.fireworks-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.firework {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  color: var(--spark);
+  background: currentColor;
+  opacity: 0;
+  animation: firework-burst 1600ms ease-out var(--delay) 4 both;
+  box-shadow:
+    0 -54px 0 -2px currentColor,
+    38px -38px 0 -2px currentColor,
+    54px 0 0 -2px currentColor,
+    38px 38px 0 -2px currentColor,
+    0 54px 0 -2px currentColor,
+    -38px 38px 0 -2px currentColor,
+    -54px 0 0 -2px currentColor,
+    -38px -38px 0 -2px currentColor;
+}
+
 .result-dialog,
 .achievements-panel {
+  position: relative;
+  z-index: 1;
   width: min(760px, 100%);
   padding: clamp(24px, 5vw, 44px);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -736,6 +768,24 @@ select {
   }
   66% {
     translate: 7px 0;
+  }
+}
+
+@keyframes firework-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+    filter: brightness(1.4);
+  }
+
+  16% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+    filter: brightness(1);
   }
 }
 

@@ -21,6 +21,7 @@ const resultTitleEl = document.querySelector("#result-title");
 const resultStepsEl = document.querySelector("#result-steps");
 const resultTimeEl = document.querySelector("#result-time");
 const resultDetailEl = document.querySelector("#result-detail");
+const fireworkColors = ["#f7d35a", "#f25f4c", "#4dd76a", "#55a8ff", "#f7f4ea"];
 const resultActionsEl = document.querySelector(".result-dialog .result-actions");
 const resultStartButton = document.querySelector("#result-start");
 const resultCloseButton = document.querySelector("#result-close");
@@ -546,6 +547,7 @@ function renderMappings() {
 
 function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   stopSigilMessage();
+  clearFireworks();
   state.lastRunAchieved = achieved;
   resultTitleEl.textContent = getResultTitle(achieved, hallOfFameResult);
   resultStepsEl.textContent = steps;
@@ -558,6 +560,9 @@ function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   resultCloseButton.hidden = !achieved || Boolean(hallOfFameResult);
   sigilMessagePanel.hidden = !achieved;
   resultOverlay.hidden = false;
+  if (hallOfFameResult?.qualified) {
+    showFireworks();
+  }
 }
 
 function getResultTitle(achieved, hallOfFameResult) {
@@ -586,7 +591,40 @@ function getResultDetail(achieved, hallOfFameResult) {
 
 function hideResult() {
   stopSigilMessage();
+  clearFireworks();
   resultOverlay.hidden = true;
+}
+
+function showFireworks() {
+  const layer = document.createElement("div");
+  layer.className = "fireworks-layer";
+  layer.setAttribute("aria-hidden", "true");
+
+  const positions = [
+    [14, 22],
+    [36, 12],
+    [61, 18],
+    [84, 25],
+    [24, 48],
+    [76, 50],
+    [48, 34],
+  ];
+
+  positions.forEach(([x, y], index) => {
+    const burst = document.createElement("span");
+    burst.className = "firework";
+    burst.style.setProperty("--x", `${x}vw`);
+    burst.style.setProperty("--y", `${y}vh`);
+    burst.style.setProperty("--delay", `${index * 180}ms`);
+    burst.style.setProperty("--spark", fireworkColors[index % fireworkColors.length]);
+    layer.append(burst);
+  });
+
+  resultOverlay.prepend(layer);
+}
+
+function clearFireworks() {
+  resultOverlay.querySelectorAll(".fireworks-layer").forEach((layer) => layer.remove());
 }
 
 function handleResultStart() {
