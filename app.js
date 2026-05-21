@@ -719,7 +719,7 @@ function formatElapsed(ms) {
 }
 
 function setStartupMessage() {
-  setMessage("Ready", "");
+  setMessage("", "");
 }
 
 function loadPadNotes() {
