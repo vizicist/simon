@@ -58,6 +58,7 @@ const state = {
   sequence: [],
   playerIndex: 0,
   acceptingInput: false,
+  gameActive: false,
   playingBack: false,
   learning: false,
   learnTarget: null,
@@ -82,7 +83,9 @@ autoConnectMidi();
 connectButton.addEventListener("click", connectMidi);
 learnButton.addEventListener("click", startLearning);
 startButton.addEventListener("click", startGame);
-resetButton.addEventListener("click", resetGame);
+if (resetButton) {
+  resetButton.addEventListener("click", resetGame);
+}
 inputSelect.addEventListener("change", selectMidiInput);
 resultStartButton.addEventListener("click", startGame);
 resultCloseButton.addEventListener("click", hideResult);
@@ -246,9 +249,11 @@ function startLearning() {
   state.learnTarget = null;
   state.learnedPads = new Set();
   state.acceptingInput = false;
+  state.gameActive = false;
   state.playingBack = false;
   state.sequence = [];
   updateRound();
+  updateStartButton();
   boardEl.classList.add("is-learning");
   pads.forEach((pad) => pad.classList.remove("learn-target"));
   learnButton.textContent = "Done";
@@ -326,9 +331,11 @@ function startGame() {
   state.sequence = [];
   state.playerIndex = 0;
   state.acceptingInput = false;
+  state.gameActive = true;
   state.playingBack = false;
   state.startedAt = Date.now();
   state.correctSteps = 0;
+  updateStartButton();
   addRound();
 }
 
@@ -340,6 +347,7 @@ function resetGame() {
   state.sequence = [];
   state.playerIndex = 0;
   state.acceptingInput = false;
+  state.gameActive = false;
   state.playingBack = false;
   state.learning = false;
   state.learnTarget = null;
@@ -348,6 +356,7 @@ function resetGame() {
   pads.forEach((pad) => pad.classList.remove("learn-target", "learned"));
   learnButton.textContent = "Learn Pads";
   syncLearningDisplay();
+  updateStartButton();
   updateRound();
   setStartupMessage();
 }
@@ -363,7 +372,6 @@ function addRound() {
 async function playSequence(runId) {
   state.playingBack = true;
   setMessage("Watch");
-  startButton.disabled = true;
   learnButton.disabled = true;
 
   await wait(playback.introDelay);
@@ -387,7 +395,6 @@ async function playSequence(runId) {
 
   state.playingBack = false;
   state.acceptingInput = true;
-  startButton.disabled = false;
   learnButton.disabled = false;
   setMessage("Your turn");
 }
@@ -422,6 +429,8 @@ function handlePad(padIndex, velocity = 96) {
 
 function endGame() {
   state.acceptingInput = false;
+  state.gameActive = false;
+  updateStartButton();
   const score = Math.max(0, state.sequence.length - 1);
   const elapsedMs = state.startedAt ? Date.now() - state.startedAt : 0;
   const isNewBest = score > state.best;
@@ -455,7 +464,7 @@ function showResult(steps, elapsedMs, isNewBest) {
   resultTitleEl.textContent = isNewBest ? "New Best" : "Missed";
   resultStepsEl.textContent = steps;
   resultTimeEl.textContent = formatElapsed(elapsedMs);
-  resultDetailEl.textContent = `Reset stops the current run only. Saved pad mappings and best score stay put.`;
+  resultDetailEl.textContent = "Press Start Again to play a new run.";
   resultOverlay.hidden = false;
 }
 
@@ -473,6 +482,10 @@ function hideAdvancedPage() {
 
 function syncLearningDisplay() {
   boardEl.classList.toggle("is-learning", state.learning);
+}
+
+function updateStartButton() {
+  startButton.textContent = state.gameActive ? "Restart" : "Start";
 }
 
 function beginAdvancedGesture(event) {

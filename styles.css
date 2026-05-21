@@ -256,7 +256,8 @@ p {
 
 .controls {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: minmax(160px, 320px);
+  justify-content: center;
   gap: 10px;
 }
 
