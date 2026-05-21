@@ -307,10 +307,6 @@ p {
   position: fixed;
   inset: 0;
   z-index: 11;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 18px;
   padding: 24px;
   background: rgba(8, 9, 11, 0.44);
   text-align: center;
@@ -318,12 +314,16 @@ p {
 }
 
 .countdown-message {
+  position: absolute;
+  left: 50%;
+  top: var(--cue-center-y, 50%);
+  width: min(1100px, calc(100vw - 48px));
   color: var(--text);
   font-size: clamp(2.2rem, 8vw, 7rem);
   font-weight: 700;
   line-height: 0.95;
   text-wrap: balance;
-  transform: translateY(-6vh);
+  transform: translate(-50%, -50%);
 }
 
 .countdown-beat {

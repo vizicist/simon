@@ -872,6 +872,8 @@ function formatElapsed(ms) {
 function createCountdownOverlay() {
   const overlay = document.createElement("div");
   overlay.className = "countdown-overlay";
+  const boardRect = boardEl.getBoundingClientRect();
+  overlay.style.setProperty("--cue-center-y", `${boardRect.top + boardRect.height / 2}px`);
 
   const message = document.createElement("span");
   message.className = "countdown-message";
