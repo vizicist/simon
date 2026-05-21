@@ -9,6 +9,7 @@ const connectButton = document.querySelector("#connect");
 const learnButton = document.querySelector("#learn");
 const startButton = document.querySelector("#start");
 const hallOfFameButton = document.querySelector("#hall-of-fame");
+const advancedHotspot = document.querySelector("#advanced-hotspot");
 const resetButton = document.querySelector("#reset");
 const boardEl = document.querySelector(".board");
 const inputSelect = document.querySelector("#midi-input");
@@ -45,10 +46,10 @@ const playback = {
   speedupPerRoundMs: 4,
 };
 
-const advancedGesture = {
-  cornerSize: 92,
-  minDistanceRatio: 0.72,
-  startCorner: null,
+const advancedAccess = {
+  taps: 0,
+  requiredTaps: 4,
+  resetTimer: null,
 };
 
 const storageKeys = {
@@ -104,9 +105,7 @@ resultAchievementsButton.addEventListener("click", showAchievementsPage);
 advancedReturnButton.addEventListener("click", hideAdvancedPage);
 advancedAchievementsButton.addEventListener("click", showAchievementsPage);
 achievementsCloseButton.addEventListener("click", hideAchievementsPage);
-window.addEventListener("pointerdown", beginAdvancedGesture);
-window.addEventListener("pointerup", finishAdvancedGesture);
-window.addEventListener("pointercancel", cancelAdvancedGesture);
+advancedHotspot.addEventListener("click", handleAdvancedHotspot);
 window.addEventListener("pointerdown", requestMainKioskOnce, { once: true });
 
 pads.forEach((pad) => {
@@ -644,64 +643,23 @@ function getFullscreenElement() {
     || document.msFullscreenElement;
 }
 
-function beginAdvancedGesture(event) {
-  if (!advancedPage.hidden || !resultOverlay.hidden) {
+function handleAdvancedHotspot() {
+  if (!advancedPage.hidden || !resultOverlay.hidden || !achievementsPage.hidden) {
     return;
   }
 
-  advancedGesture.startCorner = getCorner(event.clientX, event.clientY);
-}
+  advancedAccess.taps += 1;
+  clearTimeout(advancedAccess.resetTimer);
 
-function finishAdvancedGesture(event) {
-  if (!advancedGesture.startCorner) {
-    return;
-  }
-
-  const startCorner = advancedGesture.startCorner;
-  advancedGesture.startCorner = null;
-  const endCorner = getCorner(event.clientX, event.clientY);
-  const diagonalDistance = Math.hypot(window.innerWidth, window.innerHeight);
-  const traveled = Math.hypot(event.clientX - startCorner.x, event.clientY - startCorner.y);
-
-  if (endCorner && isOppositeCorner(startCorner, endCorner) && traveled >= diagonalDistance * advancedGesture.minDistanceRatio) {
+  if (advancedAccess.taps >= advancedAccess.requiredTaps) {
+    advancedAccess.taps = 0;
     showAdvancedPage();
-  }
-}
-
-function cancelAdvancedGesture() {
-  advancedGesture.startCorner = null;
-}
-
-function getCorner(x, y) {
-  const nearLeft = x <= advancedGesture.cornerSize;
-  const nearRight = x >= window.innerWidth - advancedGesture.cornerSize;
-  const nearTop = y <= advancedGesture.cornerSize;
-  const nearBottom = y >= window.innerHeight - advancedGesture.cornerSize;
-
-  if (nearLeft && nearTop) {
-    return { name: "top-left", x: 0, y: 0 };
+    return;
   }
 
-  if (nearRight && nearTop) {
-    return { name: "top-right", x: window.innerWidth, y: 0 };
-  }
-
-  if (nearLeft && nearBottom) {
-    return { name: "bottom-left", x: 0, y: window.innerHeight };
-  }
-
-  if (nearRight && nearBottom) {
-    return { name: "bottom-right", x: window.innerWidth, y: window.innerHeight };
-  }
-
-  return null;
-}
-
-function isOppositeCorner(startCorner, endCorner) {
-  return (startCorner.name === "top-left" && endCorner.name === "bottom-right")
-    || (startCorner.name === "bottom-right" && endCorner.name === "top-left")
-    || (startCorner.name === "top-right" && endCorner.name === "bottom-left")
-    || (startCorner.name === "bottom-left" && endCorner.name === "top-right");
+  advancedAccess.resetTimer = setTimeout(() => {
+    advancedAccess.taps = 0;
+  }, 1600);
 }
 
 function formatElapsed(ms) {

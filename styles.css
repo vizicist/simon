@@ -44,6 +44,20 @@ select {
   width: min(980px, 100%);
 }
 
+.advanced-hotspot {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 8;
+  width: min(18vw, 150px);
+  height: min(18vw, 150px);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  opacity: 0;
+  cursor: default;
+}
+
 .status-bar {
   display: grid;
   justify-items: center;
