@@ -88,6 +88,7 @@ p {
 
 .midi-panel,
 .goal-panel,
+.timing-panel,
 .controls button,
 .advanced-actions button,
 .advanced-return {
@@ -592,6 +593,23 @@ p {
   color: var(--muted);
 }
 
+.timing-panel {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: min(720px, 100%);
+  margin: 12px auto 0;
+  padding: 12px;
+  border-radius: 8px;
+  color: var(--muted);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--yellow);
+}
+
 select {
   width: 100%;
   min-height: 38px;
@@ -634,6 +652,7 @@ select {
 
   .midi-panel,
   .goal-panel,
+  .timing-panel,
   .advanced-actions {
     grid-template-columns: 1fr;
   }

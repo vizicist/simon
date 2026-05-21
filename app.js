@@ -11,6 +11,8 @@ const resetButton = document.querySelector("#reset");
 const boardEl = document.querySelector(".board");
 const inputSelect = document.querySelector("#midi-input");
 const sequenceGoalSelect = document.querySelector("#sequence-goal");
+const sequenceTimingInput = document.querySelector("#sequence-timing");
+const sequenceTimingValue = document.querySelector("#sequence-timing-value");
 const midiStateEl = document.querySelector("#midi-state");
 const resultOverlay = document.querySelector("#result-overlay");
 const resultTitleEl = document.querySelector("#result-title");
@@ -55,7 +57,6 @@ const keyMap = new Map([
 
 const playback = {
   introDelay: 700,
-  litMs: 1000,
 };
 
 const responseTimeoutMs = 6000;
@@ -73,6 +74,7 @@ const storageKeys = {
   inputName: "bop-pad-simon-input-name",
   notes: "bop-pad-simon-notes",
   sequenceGoal: "sigil-sequence-goal",
+  sequenceTiming: "sigil-sequence-timing",
 };
 
 const defaultPadNotes = [null, null, null, null];
@@ -98,6 +100,7 @@ const state = {
   padNotes: loadedPadNotes.notes,
   hasSavedMapping: loadedPadNotes.saved,
   sequenceGoal: loadSequenceGoal(),
+  sequenceTiming: loadSequenceTiming(),
   activeSigilMessage: null,
 };
 
@@ -106,6 +109,7 @@ if (bestEl) {
 }
 renderMappings();
 renderSequenceGoal();
+renderSequenceTiming();
 syncLearningDisplay();
 autoConnectMidi();
 
@@ -118,6 +122,7 @@ if (resetButton) {
 }
 inputSelect.addEventListener("change", selectMidiInput);
 sequenceGoalSelect.addEventListener("change", updateSequenceGoal);
+sequenceTimingInput.addEventListener("input", updateSequenceTiming);
 resultStartButton.addEventListener("click", startGame);
 resultCloseButton.addEventListener("click", hideResult);
 resultAchievementsButton.addEventListener("click", showAchievementsPage);
@@ -403,9 +408,10 @@ async function playSequence(runId) {
       return;
     }
 
-    flashPad(pad, 96, playback.litMs);
-    playMechanicalSound(pad);
-    await wait(playback.litMs);
+    const stepDurationMs = getSequenceStepDurationMs();
+    flashPad(pad, 96, stepDurationMs);
+    playMechanicalSound(pad, 96, stepDurationMs);
+    await wait(stepDurationMs);
   }
 
   if (runId !== state.runId) {
@@ -611,8 +617,23 @@ function renderSequenceGoal() {
   sequenceGoalSelect.value = String(state.sequenceGoal);
 }
 
+function updateSequenceTiming() {
+  state.sequenceTiming = normalizeSequenceTiming(sequenceTimingInput.value);
+  localStorage.setItem(storageKeys.sequenceTiming, String(state.sequenceTiming));
+  renderSequenceTiming();
+}
+
+function renderSequenceTiming() {
+  sequenceTimingInput.value = String(state.sequenceTiming);
+  sequenceTimingValue.textContent = `${state.sequenceTiming.toFixed(2)}s`;
+}
+
 function loadSequenceGoal() {
   return normalizeSequenceGoal(localStorage.getItem(storageKeys.sequenceGoal) || "unlimited");
+}
+
+function loadSequenceTiming() {
+  return normalizeSequenceTiming(localStorage.getItem(storageKeys.sequenceTiming) || "1");
 }
 
 function normalizeSequenceGoal(value) {
@@ -626,6 +647,19 @@ function normalizeSequenceGoal(value) {
   }
 
   return "unlimited";
+}
+
+function normalizeSequenceTiming(value) {
+  const numericValue = Number(value);
+  if (Number.isFinite(numericValue)) {
+    return Math.min(1, Math.max(0.25, Math.round(numericValue * 100) / 100));
+  }
+
+  return 1;
+}
+
+function getSequenceStepDurationMs() {
+  return Math.round(state.sequenceTiming * 1000);
 }
 
 function renderAchievements() {
@@ -820,7 +854,7 @@ function missPad(index) {
   window.setTimeout(() => pads[index].classList.remove("miss"), 280);
 }
 
-function playMechanicalSound(index, velocity = 96) {
+function playMechanicalSound(index, velocity = 96, durationMs = 1000) {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   if (!AudioContext) {
     return;
@@ -840,6 +874,8 @@ function playMechanicalSound(index, velocity = 96) {
   ];
   const voice = voices[index];
   const now = context.currentTime;
+  const durationSeconds = Math.min(1, Math.max(0.25, durationMs / 1000));
+  const releaseTime = now + durationSeconds;
   const level = 0.18 + (velocity / 127) * 0.32;
   const master = context.createGain();
   const compressor = context.createDynamicsCompressor();
@@ -854,16 +890,16 @@ function playMechanicalSound(index, velocity = 96) {
   compressor.release.setValueAtTime(0.16, now);
   filter.type = "lowpass";
   filter.frequency.setValueAtTime(voice.filter, now);
-  filter.frequency.exponentialRampToValueAtTime(voice.filter * 0.56, now + 0.95);
+  filter.frequency.exponentialRampToValueAtTime(voice.filter * 0.56, now + durationSeconds * 0.95);
   filter.Q.setValueAtTime(7, now);
   noiseFilter.type = "bandpass";
   noiseFilter.frequency.setValueAtTime(voice.filter * 1.25, now);
   noiseFilter.Q.setValueAtTime(5, now);
   master.gain.setValueAtTime(0.0001, now);
   master.gain.exponentialRampToValueAtTime(level, now + 0.018);
-  master.gain.exponentialRampToValueAtTime(level * 0.72, now + 0.28);
-  master.gain.exponentialRampToValueAtTime(level * 0.34, now + 0.82);
-  master.gain.exponentialRampToValueAtTime(0.0001, now + 1);
+  master.gain.exponentialRampToValueAtTime(level * 0.72, now + durationSeconds * 0.28);
+  master.gain.exponentialRampToValueAtTime(level * 0.34, now + durationSeconds * 0.82);
+  master.gain.exponentialRampToValueAtTime(0.0001, releaseTime);
 
   const output = panner || context.destination;
   if (panner) {
@@ -877,14 +913,14 @@ function playMechanicalSound(index, velocity = 96) {
     const overtoneGain = context.createGain();
     oscillator.type = overtoneIndex === 0 ? "square" : "sawtooth";
     oscillator.frequency.setValueAtTime(voice.base * ratio, now);
-    oscillator.frequency.exponentialRampToValueAtTime(voice.base * ratio * 0.92, now + 0.95);
+    oscillator.frequency.exponentialRampToValueAtTime(voice.base * ratio * 0.92, now + durationSeconds * 0.95);
     overtoneGain.gain.setValueAtTime(overtoneIndex === 0 ? 1 : 0.42 / overtoneIndex, now);
     oscillator.connect(overtoneGain).connect(master);
     oscillator.start(now);
-    oscillator.stop(now + 1.04);
+    oscillator.stop(releaseTime + 0.04);
   });
 
-  const bufferSize = Math.floor(context.sampleRate * 0.95);
+  const bufferSize = Math.floor(context.sampleRate * durationSeconds * 0.95);
   const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i += 1) {
@@ -897,16 +933,17 @@ function playMechanicalSound(index, velocity = 96) {
   const noiseGain = context.createGain();
   noise.buffer = buffer;
   noiseGain.gain.setValueAtTime(level * 0.82, now);
-  noiseGain.gain.exponentialRampToValueAtTime(level * 0.28, now + 0.42);
-  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.95);
+  noiseGain.gain.exponentialRampToValueAtTime(level * 0.28, now + durationSeconds * 0.42);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSeconds * 0.95);
   noise.connect(noiseFilter).connect(noiseGain).connect(compressor);
   noise.start(now);
-  noise.stop(now + 0.98);
+  noise.stop(releaseTime);
 
-  for (let tick = 0; tick < 5; tick += 1) {
+  const tickCount = Math.max(2, Math.round(durationSeconds / 0.18));
+  for (let tick = 0; tick < tickCount; tick += 1) {
     const click = context.createOscillator();
     const clickGain = context.createGain();
-    const clickTime = now + tick * 0.18;
+    const clickTime = now + tick * (durationSeconds / tickCount);
     click.type = "square";
     click.frequency.setValueAtTime(voice.filter * (1.7 - tick * 0.08), clickTime);
     clickGain.gain.setValueAtTime(level * 0.48, clickTime);
