@@ -233,7 +233,7 @@ p {
   --pad-color: #44d05b;
   --shape-x: 58%;
   --shape-y: 58%;
-  --shape-size: 82%;
+  --shape-size: 80%;
   border-radius: 100% 0 0 0;
 }
 
@@ -255,7 +255,7 @@ p {
   --pad-color: #3f95f1;
   --shape-x: 42%;
   --shape-y: 42%;
-  --shape-size: 86%;
+  --shape-size: 84%;
   border-radius: 0 0 100% 0;
 }
 
