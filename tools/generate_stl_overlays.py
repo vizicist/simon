@@ -225,19 +225,30 @@ def parse_transform(transform: str):
     return tx, ty, sx, sy
 
 
-def load_svg_polygons(svg_path: Path) -> list[list[tuple[float, float]]]:
+def load_svg_paths(svg_path: Path) -> list[list[list[tuple[float, float]]]]:
     tree = ElementTree.parse(svg_path)
     root = tree.getroot()
     ns = {"svg": "http://www.w3.org/2000/svg"}
     group = root.find(".//svg:g", ns)
     tx, ty, sx, sy = parse_transform(group.attrib.get("transform", "") if group is not None else "")
-    polygons = []
+    path_groups = []
     for path in root.findall(".//svg:path", ns):
+        polygons = []
         for poly in parse_path(path.attrib["d"]):
             transformed = [(x * sx + tx, y * sy + ty) for x, y in poly]
             if len(transformed) > 2:
                 polygons.append(transformed)
-    return polygons
+        if polygons:
+            path_groups.append(polygons)
+    return path_groups
+
+
+def polygon_area(poly: list[tuple[float, float]]) -> float:
+    area = 0.0
+    for index, point in enumerate(poly):
+        next_point = poly[(index + 1) % len(poly)]
+        area += point[0] * next_point[1] - next_point[0] * point[1]
+    return area / 2
 
 
 def quadrant_center(quadrant: str) -> tuple[float, float]:
@@ -273,7 +284,8 @@ def is_inside_quadrant(x_mm: float, y_mm: float, quadrant: str) -> bool:
 
 
 def make_sigil_mask(svg_path: Path, cells: int, quadrant: str) -> Image.Image:
-    polygons = load_svg_polygons(svg_path)
+    path_groups = load_svg_paths(svg_path)
+    polygons = [poly for group in path_groups for poly in group]
     points = [point for poly in polygons for point in poly]
     min_x = min(p[0] for p in points)
     max_x = max(p[0] for p in points)
@@ -288,15 +300,22 @@ def make_sigil_mask(svg_path: Path, cells: int, quadrant: str) -> Image.Image:
 
     mask = Image.new("L", (cells, cells), 0)
     draw = ImageDraw.Draw(mask)
-    for poly in polygons:
-        mapped = [
-            (
-                center_px[0] + (x - (min_x + max_x) / 2) * scale,
-                center_px[1] + (y - (min_y + max_y) / 2) * scale,
-            )
-            for x, y in poly
-        ]
-        draw.polygon(mapped, fill=255)
+    for group in path_groups:
+        mapped_group = []
+        for poly in group:
+            mapped_group.append([
+                (
+                    center_px[0] + (x - (min_x + max_x) / 2) * scale,
+                    center_px[1] + (y - (min_y + max_y) / 2) * scale,
+                )
+                for x, y in poly
+            ])
+
+        base_area = next((polygon_area(poly) for poly in mapped_group if abs(polygon_area(poly)) > 0.01), 0)
+        for poly in mapped_group:
+            area = polygon_area(poly)
+            fill = 0 if base_area and area * base_area < 0 else 255
+            draw.polygon(poly, fill=fill)
     return mask
 
 
