@@ -306,7 +306,7 @@ p {
 
 .controls {
   display: grid;
-  grid-template-columns: minmax(390px, 1.2fr) minmax(380px, 1.05fr) minmax(220px, 0.75fr);
+  grid-template-columns: repeat(2, minmax(320px, 440px));
   justify-content: center;
   gap: 10px;
 }
@@ -327,6 +327,10 @@ p {
 #start,
 #hall-of-fame-challenge {
   white-space: nowrap;
+}
+
+#start {
+  grid-column: 1 / -1;
 }
 
 .controls button:hover,
