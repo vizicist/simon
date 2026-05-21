@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sigil Sequence Ritual</title>
-    <link rel="stylesheet" href="styles.css?v=16">
+    <link rel="stylesheet" href="styles.css?v=17">
   </head>
   <body>
     <main class="app" aria-labelledby="title">
@@ -43,7 +43,7 @@
 
         <div class="controls" aria-label="Game controls">
           <button id="start" type="button">Start</button>
-          <button id="hall-of-fame" type="button">Sequence Hall of Fame</button>
+          <button id="hall-of-fame" type="button">Sigil Sequence Hall of Fame</button>
         </div>
       </section>
 
@@ -53,7 +53,7 @@
           <div class="advanced-actions" aria-label="Advanced controls">
             <button id="connect" type="button">Connect MIDI</button>
             <button id="learn" type="button">Learn Pads</button>
-            <button id="advanced-achievements" type="button">Sequence Hall of Fame</button>
+            <button id="advanced-achievements" type="button">Sigil Sequence Hall of Fame</button>
           </div>
           <div class="midi-panel">
             <label for="midi-input">MIDI input</label>
@@ -81,7 +81,7 @@
           <p id="result-detail">Press Start to play again.</p>
           <div class="result-actions">
             <button id="result-start" type="button">Start Again</button>
-            <button id="result-achievements" type="button">Sequence Hall of Fame</button>
+            <button id="result-achievements" type="button">Sigil Sequence Hall of Fame</button>
             <button id="result-close" type="button">Close</button>
           </div>
         </div>
@@ -90,7 +90,7 @@
       <section class="achievements-page" id="achievements-page" aria-labelledby="achievements-title" aria-modal="true" role="dialog" hidden>
         <div class="achievements-panel">
           <p class="result-kicker">All-time top 5</p>
-          <h2 id="achievements-title">Sequence Hall of Fame</h2>
+          <h2 id="achievements-title">Sigil Sequence Hall of Fame</h2>
           <ol class="achievement-list" id="achievement-list"></ol>
           <p class="achievement-empty" id="achievement-empty">Complete a run to begin the record.</p>
           <div class="result-actions">
@@ -100,6 +100,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=16"></script>
+    <script src="app.js?v=17"></script>
   </body>
 </html>
