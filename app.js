@@ -56,9 +56,6 @@ const keyMap = new Map([
 const playback = {
   introDelay: 700,
   litMs: 1000,
-  gapMs: 320,
-  minGapMs: 190,
-  speedupPerRoundMs: 4,
 };
 
 const advancedAccess = {
@@ -403,11 +400,7 @@ async function playSequence(runId) {
 
     flashPad(pad, 96, playback.litMs);
     playMechanicalSound(pad);
-    const gap = Math.max(
-      playback.minGapMs,
-      playback.gapMs - state.sequence.length * playback.speedupPerRoundMs,
-    );
-    await wait(playback.litMs + gap);
+    await wait(playback.litMs);
   }
 
   if (runId !== state.runId) {
