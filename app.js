@@ -638,7 +638,7 @@ function saveAchievement(steps, elapsedMs, achieved) {
 
   localStorage.setItem(
     storageKeys.achievements,
-    JSON.stringify(sortAchievements(achievements).slice(0, 5)),
+    JSON.stringify(sortAchievements(achievements).slice(0, 10)),
   );
 }
 
@@ -724,7 +724,7 @@ function getSequenceStepDurationMs() {
 }
 
 function renderAchievements() {
-  const achievements = sortAchievements(loadAchievements()).slice(0, 5);
+  const achievements = sortAchievements(loadAchievements()).slice(0, 10);
   achievementList.replaceChildren();
   achievementEmpty.hidden = achievements.length > 0;
 
