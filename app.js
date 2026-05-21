@@ -40,8 +40,8 @@ const keyMap = new Map([
 
 const playback = {
   introDelay: 700,
-  litMs: 420,
-  gapMs: 260,
+  litMs: 1000,
+  gapMs: 320,
   minGapMs: 190,
   speedupPerRoundMs: 4,
 };
@@ -401,7 +401,7 @@ async function playSequence(runId) {
     }
 
     flashPad(pad, 96, playback.litMs);
-    playTone(pad);
+    playMechanicalSound(pad);
     const gap = Math.max(
       playback.minGapMs,
       playback.gapMs - state.sequence.length * playback.speedupPerRoundMs,
@@ -442,7 +442,7 @@ function handlePad(padIndex, velocity = 96) {
   }
 
   flashPad(padIndex, velocity);
-  playTone(padIndex, velocity);
+  playMechanicalSound(padIndex, velocity);
 
   if (!state.acceptingInput) {
     return;
@@ -700,7 +700,7 @@ function isValidPadNotes(notes) {
     && new Set(notes).size === 4;
 }
 
-function flashPad(index, velocity = 96, duration = 220) {
+function flashPad(index, velocity = 96, duration = 1000) {
   const pad = pads[index];
   pad.style.setProperty("--hit", velocity / 127);
   pad.classList.add("active");
@@ -712,29 +712,70 @@ function missPad(index) {
   window.setTimeout(() => pads[index].classList.remove("miss"), 280);
 }
 
-function playTone(index, velocity = 96) {
+function playMechanicalSound(index, velocity = 96) {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   if (!AudioContext) {
     return;
   }
 
-  const context = playTone.context || new AudioContext();
-  playTone.context = context;
+  const context = playMechanicalSound.context || new AudioContext();
+  playMechanicalSound.context = context;
 
-  const frequencies = [329.63, 392, 261.63, 523.25];
-  const gain = context.createGain();
-  const oscillator = context.createOscillator();
+  const voices = [
+    { base: 196, overtones: [2.01, 3.98], pan: -0.42 },
+    { base: 247, overtones: [2.51, 5.02], pan: 0.42 },
+    { base: 165, overtones: [2.75, 4.49], pan: -0.18 },
+    { base: 294, overtones: [1.5, 3.01], pan: 0.18 },
+  ];
+  const voice = voices[index];
   const now = context.currentTime;
-  const level = 0.035 + (velocity / 127) * 0.11;
+  const level = 0.03 + (velocity / 127) * 0.12;
+  const master = context.createGain();
+  const filter = context.createBiquadFilter();
+  const panner = context.createStereoPanner ? context.createStereoPanner() : null;
 
-  oscillator.type = "triangle";
-  oscillator.frequency.value = frequencies[index];
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(level, now + 0.012);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.17);
-  oscillator.connect(gain).connect(context.destination);
-  oscillator.start(now);
-  oscillator.stop(now + 0.19);
+  filter.type = "bandpass";
+  filter.frequency.setValueAtTime(voice.base * 4, now);
+  filter.Q.setValueAtTime(9, now);
+  master.gain.setValueAtTime(0.0001, now);
+  master.gain.exponentialRampToValueAtTime(level, now + 0.014);
+  master.gain.exponentialRampToValueAtTime(level * 0.42, now + 0.16);
+  master.gain.exponentialRampToValueAtTime(0.0001, now + 1);
+
+  const output = panner || context.destination;
+  if (panner) {
+    panner.pan.setValueAtTime(voice.pan, now);
+    panner.connect(context.destination);
+  }
+  master.connect(filter).connect(output);
+
+  [1, ...voice.overtones].forEach((ratio, overtoneIndex) => {
+    const oscillator = context.createOscillator();
+    const overtoneGain = context.createGain();
+    oscillator.type = overtoneIndex === 0 ? "triangle" : "sine";
+    oscillator.frequency.setValueAtTime(voice.base * ratio, now);
+    oscillator.frequency.exponentialRampToValueAtTime(voice.base * ratio * 0.985, now + 1);
+    overtoneGain.gain.setValueAtTime(overtoneIndex === 0 ? 1 : 0.34 / overtoneIndex, now);
+    oscillator.connect(overtoneGain).connect(master);
+    oscillator.start(now);
+    oscillator.stop(now + 1.04);
+  });
+
+  const bufferSize = Math.floor(context.sampleRate * 0.04);
+  const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i += 1) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  }
+
+  const noise = context.createBufferSource();
+  const noiseGain = context.createGain();
+  noise.buffer = buffer;
+  noiseGain.gain.setValueAtTime(level * 0.38, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.055);
+  noise.connect(noiseGain).connect(master);
+  noise.start(now);
+  noise.stop(now + 0.06);
 }
 
 function wait(ms) {
