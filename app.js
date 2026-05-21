@@ -2,6 +2,8 @@ const pads = Array.from(document.querySelectorAll(".pad"));
 const roundEl = document.querySelector("#round");
 const bestEl = document.querySelector("#best");
 const messageEl = document.querySelector("#message");
+const countdownEl = document.querySelector("#countdown");
+const centerPanel = document.querySelector(".center-panel");
 const subtitleEl = document.querySelector("#subtitle");
 const connectButton = document.querySelector("#connect");
 const learnButton = document.querySelector("#learn");
@@ -135,8 +137,10 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
-function setMessage(message, subtitle) {
+function setMessage(message, subtitle, countdown = "") {
   messageEl.textContent = message;
+  countdownEl.textContent = countdown;
+  centerPanel.classList.toggle("is-empty", !message && !countdown);
   if (subtitle) {
     subtitleEl.textContent = subtitle;
   }
@@ -331,7 +335,7 @@ function finishLearning() {
   }
 }
 
-function startGame() {
+async function startGame() {
   hideResult();
   hideAchievementsPage();
   hideAdvancedPage();
@@ -351,6 +355,12 @@ function startGame() {
   state.startedAt = Date.now();
   state.correctSteps = 0;
   updateStartButton();
+  const runId = state.runId;
+  await runStartCountdown(runId);
+  if (runId !== state.runId) {
+    return;
+  }
+
   addRound();
 }
 
@@ -388,7 +398,7 @@ function addRound() {
 
 async function playSequence(runId) {
   state.playingBack = true;
-  setMessage("Watch");
+  setMessage("");
   learnButton.disabled = true;
 
   await wait(playback.introDelay);
@@ -414,6 +424,23 @@ async function playSequence(runId) {
   state.acceptingInput = true;
   learnButton.disabled = false;
   setMessage("Your turn");
+}
+
+async function runStartCountdown(runId) {
+  const beats = ["3", "2", "1", "GO"];
+
+  for (const beat of beats) {
+    if (runId !== state.runId) {
+      return;
+    }
+
+    setMessage("Match the Sigil Sequence", null, beat);
+    await wait(beat === "GO" ? 650 : 850);
+  }
+
+  if (runId === state.runId) {
+    setMessage("");
+  }
 }
 
 function handlePad(padIndex, velocity = 96) {

@@ -232,10 +232,12 @@ p {
 .center-panel {
   position: absolute;
   inset: 50% auto auto 50%;
-  width: min(26%, 170px);
+  width: min(34%, 230px);
   aspect-ratio: 1;
   display: grid;
   place-items: center;
+  align-content: center;
+  gap: 6px;
   translate: -50% -50%;
   padding: 18px;
   border-radius: 50%;
@@ -245,6 +247,24 @@ p {
   font-weight: 850;
   letter-spacing: 0;
   box-shadow: 0 20px 42px rgba(0, 0, 0, 0.38);
+}
+
+.center-panel.is-empty {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#message {
+  max-width: 11ch;
+  font-size: clamp(0.95rem, 2.2vw, 1.5rem);
+  line-height: 1.05;
+}
+
+#countdown {
+  display: block;
+  color: var(--yellow);
+  font-size: clamp(2.2rem, 7vw, 4.6rem);
+  line-height: 0.9;
 }
 
 .controls,
