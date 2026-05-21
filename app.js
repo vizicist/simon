@@ -124,6 +124,7 @@ renderSequenceTiming();
 renderStartCountdown();
 syncLearningDisplay();
 autoConnectMidi();
+requestMainKioskOnStartup();
 
 connectButton.addEventListener("click", connectMidi);
 learnButton.addEventListener("click", startLearning);
@@ -783,8 +784,23 @@ function updateStartButton() {
     : "Start Hall of Fame Challenge";
 }
 
+function requestMainKioskOnStartup() {
+  const request = () => {
+    if (advancedPage.hidden && resultOverlay.hidden && achievementsPage.hidden) {
+      enterKioskMode();
+    }
+  };
+
+  if (document.readyState === "complete") {
+    setTimeout(request, 100);
+    return;
+  }
+
+  window.addEventListener("load", () => setTimeout(request, 100), { once: true });
+}
+
 function requestMainKioskOnce() {
-  if (advancedPage.hidden && resultOverlay.hidden) {
+  if (advancedPage.hidden && resultOverlay.hidden && achievementsPage.hidden) {
     enterKioskMode();
   }
 }
