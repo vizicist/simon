@@ -556,12 +556,7 @@ function formatElapsed(ms) {
 }
 
 function setStartupMessage() {
-  setMessage(
-    state.hasSavedMapping ? "Map loaded" : "Ready",
-    state.hasSavedMapping
-      ? "Saved Bop Pad mapping loaded. Connect MIDI and press Start."
-      : "Connect MIDI, learn pads if needed, then start.",
-  );
+  setMessage("Ready", "Repeat the pattern using the four Bop Pad zones.");
 }
 
 function loadPadNotes() {
