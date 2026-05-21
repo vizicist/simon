@@ -419,7 +419,7 @@ async function playSequence(runId) {
 }
 
 async function runStartCountdown(runId) {
-  const beats = ["3", "2", "1", "GO"];
+  const beats = ["5", "4", "3", "2", "1", "GO"];
   const countdownOverlay = createCountdownOverlay();
 
   for (const beat of beats) {
