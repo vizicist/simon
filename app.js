@@ -670,7 +670,7 @@ function formatElapsed(ms) {
 }
 
 function setStartupMessage() {
-  setMessage("Ready", "Repeat the pattern using the four Bop Pad zones.");
+  setMessage("Ready", "");
 }
 
 function loadPadNotes() {
