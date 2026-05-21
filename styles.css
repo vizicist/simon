@@ -334,7 +334,7 @@ p {
 
 .controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(320px, 440px));
+  grid-template-columns: repeat(2, minmax(320px, 520px));
   justify-content: center;
   gap: 10px;
 }
@@ -360,7 +360,7 @@ p {
 
 #start {
   grid-column: 1 / -1;
-  font-size: clamp(1.45rem, 2.8vw, 2.15rem);
+  font-size: clamp(1.6rem, 3.35vw, 2.55rem);
   min-height: 70px;
 }
 
