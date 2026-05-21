@@ -334,7 +334,7 @@ p {
 
 .controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(320px, 520px));
+  grid-template-columns: repeat(2, minmax(0, 520px));
   justify-content: center;
   column-gap: 10px;
   row-gap: clamp(18px, 3vh, 34px);
@@ -361,16 +361,27 @@ p {
 
 #start {
   grid-column: 1 / -1;
+  justify-self: center;
+  width: min(1048px, 100%);
   font-size: clamp(1.6rem, 3.35vw, 2.55rem);
   min-height: 70px;
 }
 
 #hall-of-fame-challenge,
 #show-hall-of-fame {
+  width: min(360px, 100%);
   min-height: 46px;
   padding: 8px 14px;
   font-size: clamp(0.92rem, 1.55vw, 1.14rem);
   font-weight: 400;
+}
+
+#hall-of-fame-challenge {
+  justify-self: end;
+}
+
+#show-hall-of-fame {
+  justify-self: start;
 }
 
 .controls button:hover,
