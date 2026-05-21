@@ -6,6 +6,7 @@ const subtitleEl = document.querySelector("#subtitle");
 const connectButton = document.querySelector("#connect");
 const learnButton = document.querySelector("#learn");
 const startButton = document.querySelector("#start");
+const hallOfFameButton = document.querySelector("#hall-of-fame");
 const resetButton = document.querySelector("#reset");
 const boardEl = document.querySelector(".board");
 const inputSelect = document.querySelector("#midi-input");
@@ -90,6 +91,7 @@ autoConnectMidi();
 connectButton.addEventListener("click", connectMidi);
 learnButton.addEventListener("click", startLearning);
 startButton.addEventListener("click", startGame);
+hallOfFameButton.addEventListener("click", showAchievementsPage);
 if (resetButton) {
   resetButton.addEventListener("click", resetGame);
 }
