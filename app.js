@@ -108,6 +108,7 @@ const state = {
   sequenceTiming: loadSequenceTiming(),
   recordHallOfFame: false,
   lastStartMode: "ritual",
+  lastRunAchieved: false,
   activeSigilMessage: null,
 };
 
@@ -130,7 +131,7 @@ if (resetButton) {
 inputSelect.addEventListener("change", selectMidiInput);
 sequenceGoalSelect.addEventListener("change", updateSequenceGoal);
 sequenceTimingInput.addEventListener("input", updateSequenceTiming);
-resultStartButton.addEventListener("click", () => startGame(state.lastStartMode));
+resultStartButton.addEventListener("click", handleResultStart);
 resultCloseButton.addEventListener("click", hideResult);
 resultAchievementsButton.addEventListener("click", showAchievementsPage);
 sigilMessageButtons.forEach((button) => {
@@ -532,6 +533,7 @@ function renderMappings() {
 
 function showResult(steps, elapsedMs, achieved) {
   stopSigilMessage();
+  state.lastRunAchieved = achieved;
   resultTitleEl.textContent = achieved ? "Ritual Achieved" : "Ritual Incomplete";
   resultStepsEl.textContent = steps;
   resultTimeEl.textContent = formatElapsed(elapsedMs);
@@ -549,6 +551,16 @@ function showResult(steps, elapsedMs, achieved) {
 function hideResult() {
   stopSigilMessage();
   resultOverlay.hidden = true;
+}
+
+function handleResultStart() {
+  if (state.lastRunAchieved) {
+    startGame(state.lastStartMode);
+    return;
+  }
+
+  hideResult();
+  enterKioskMode();
 }
 
 function playSigilMessage(sigil) {
