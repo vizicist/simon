@@ -301,7 +301,7 @@ p {
 
 .controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 320px));
+  grid-template-columns: repeat(2, minmax(220px, 360px));
   justify-content: center;
   gap: 10px;
 }
@@ -309,10 +309,14 @@ p {
 .controls button,
 .advanced-actions button,
 .advanced-return {
-  min-height: 44px;
+  min-height: 54px;
+  padding: 10px 16px;
   color: var(--text);
   border-radius: 8px;
   cursor: pointer;
+  font-size: clamp(1.18rem, 2.1vw, 1.55rem);
+  font-weight: 850;
+  line-height: 1.08;
 }
 
 .controls button:hover,
@@ -518,12 +522,16 @@ p {
 }
 
 .result-actions button {
-  min-height: 48px;
+  min-height: 58px;
+  padding: 10px 16px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
   background: var(--panel-2);
   color: var(--text);
   cursor: pointer;
+  font-size: clamp(1.18rem, 2.1vw, 1.5rem);
+  font-weight: 850;
+  line-height: 1.08;
 }
 
 .result-actions button:hover,
