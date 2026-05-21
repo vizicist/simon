@@ -340,7 +340,7 @@ p {
   grid-template-columns: repeat(2, minmax(0, 520px));
   justify-content: center;
   column-gap: 10px;
-  row-gap: clamp(18px, 3vh, 34px);
+  row-gap: clamp(26px, 4.8vh, 48px);
 }
 
 .controls button,
@@ -373,9 +373,9 @@ p {
 #hall-of-fame-challenge,
 #show-hall-of-fame {
   width: min(292px, 100%);
-  min-height: 42px;
+  min-height: 44px;
   padding: 7px 11px;
-  font-size: clamp(0.78rem, 1.24vw, 0.92rem);
+  font-size: clamp(0.84rem, 1.25vw, 1rem);
   font-weight: 400;
 }
 
