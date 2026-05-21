@@ -5,10 +5,10 @@
   --panel-2: #242932;
   --text: #f7f4ea;
   --muted: #aeb5c2;
-  --green: #b8d2a2;
-  --red: #dfb49a;
-  --yellow: #e8d28d;
-  --blue: #aec9dc;
+  --green: #a8bfbb;
+  --red: #d91828;
+  --yellow: #d9cf4a;
+  --blue: #0288a6;
   --ring: #ffffff;
   --pad-surface: #efe8d3;
   --pad-line: #18171c;
@@ -230,7 +230,7 @@ p {
 }
 
 .pad-green {
-  --pad-color: #44d05b;
+  --pad-color: var(--green);
   --shape-x: 58%;
   --shape-y: 58%;
   --shape-size: 78%;
@@ -238,21 +238,21 @@ p {
 }
 
 .pad-red {
-  --pad-color: #f1563f;
+  --pad-color: var(--red);
   --shape-x: 42%;
   --shape-y: 58%;
   border-radius: 0 100% 0 0;
 }
 
 .pad-yellow {
-  --pad-color: #f2c83d;
+  --pad-color: var(--yellow);
   --shape-x: 58%;
   --shape-y: 42%;
   border-radius: 0 0 0 100%;
 }
 
 .pad-blue {
-  --pad-color: #3f95f1;
+  --pad-color: var(--blue);
   --shape-x: 42%;
   --shape-y: 42%;
   --shape-size: 82%;
