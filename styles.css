@@ -415,6 +415,14 @@ p {
   text-align: center;
 }
 
+.achievements-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
 .result-kicker {
   margin-bottom: 10px;
   color: var(--yellow);
@@ -514,6 +522,7 @@ p {
 
 .achievements-panel .result-actions {
   grid-template-columns: 1fr;
+  flex-shrink: 0;
 }
 
 .result-actions button {
@@ -536,6 +545,8 @@ p {
   margin: 28px 0 0;
   padding: 0;
   list-style: none;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .achievement-list li {
