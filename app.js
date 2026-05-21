@@ -551,7 +551,7 @@ function showResult(steps, elapsedMs, achieved) {
   resultDetailEl.textContent = achieved
     ? "The sigil sequence reached its chosen goal."
     : "";
-  resultStartButton.textContent = achieved ? "Start Again" : "Try Again";
+  resultStartButton.textContent = achieved ? "Start Again" : "Return";
   resultActionsEl.classList.toggle("is-single", !achieved);
   resultAchievementsButton.hidden = !achieved;
   resultCloseButton.hidden = !achieved;
