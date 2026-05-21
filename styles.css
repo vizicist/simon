@@ -442,7 +442,7 @@ p {
 
 .result-dialog,
 .achievements-panel {
-  width: min(640px, 100%);
+  width: min(760px, 100%);
   padding: clamp(24px, 5vw, 44px);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
@@ -476,7 +476,7 @@ p {
 }
 
 #result-title {
-  font-size: clamp(1.45rem, 7.2vw, 5.8rem);
+  font-size: clamp(1.35rem, 5vw, 3.6rem);
   overflow-wrap: normal;
   text-wrap: nowrap;
   white-space: nowrap;
