@@ -369,10 +369,10 @@ p {
 
 #hall-of-fame-challenge,
 #show-hall-of-fame {
-  width: min(360px, 100%);
-  min-height: 46px;
-  padding: 8px 14px;
-  font-size: clamp(0.92rem, 1.55vw, 1.14rem);
+  width: min(292px, 100%);
+  min-height: 42px;
+  padding: 7px 11px;
+  font-size: clamp(0.78rem, 1.24vw, 0.92rem);
   font-weight: 400;
 }
 
