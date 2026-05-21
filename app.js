@@ -20,6 +20,8 @@ const resultDetailEl = document.querySelector("#result-detail");
 const resultStartButton = document.querySelector("#result-start");
 const resultCloseButton = document.querySelector("#result-close");
 const resultAchievementsButton = document.querySelector("#result-achievements");
+const sigilMessagePanel = document.querySelector("#sigil-message-panel");
+const sigilMessageButtons = Array.from(document.querySelectorAll(".sigil-message-button"));
 const advancedPage = document.querySelector("#advanced-page");
 const advancedReturnButton = document.querySelector("#advanced-return");
 const advancedAchievementsButton = document.querySelector("#advanced-achievements");
@@ -29,6 +31,20 @@ const achievementEmpty = document.querySelector("#achievement-empty");
 const achievementsCloseButton = document.querySelector("#achievements-close");
 
 const colors = ["green", "red", "yellow", "blue"];
+const sigilMessages = {
+  chaos: ["mp3s/chaos-2026-05-09-21.18.04-319920.mp3"],
+  oracle: ["mp3s/oracle-2026-05-09-21.18.45-427404.mp3"],
+  directive: [
+    "mp3s/directive-2026-05-09-21.12.17-583320.mp3",
+    "mp3s/directive-2026-05-09-21.24.07-902931.mp3",
+    "mp3s/directive-2026-05-09-21.25.38-684815.mp3",
+  ],
+  sacred: [
+    "mp3s/sacred-2026-05-09-21.13.27-639718.mp3",
+    "mp3s/sacred-2026-05-09-21.20.30-170710.mp3",
+    "mp3s/sacred-2026-05-09-21.22.35-674882.mp3",
+  ],
+};
 const keyMap = new Map([
   ["q", 0],
   ["w", 1],
@@ -81,6 +97,7 @@ const state = {
   padNotes: loadedPadNotes.notes,
   hasSavedMapping: loadedPadNotes.saved,
   sequenceGoal: loadSequenceGoal(),
+  activeSigilMessage: null,
 };
 
 if (bestEl) {
@@ -103,6 +120,9 @@ sequenceGoalSelect.addEventListener("change", updateSequenceGoal);
 resultStartButton.addEventListener("click", startGame);
 resultCloseButton.addEventListener("click", hideResult);
 resultAchievementsButton.addEventListener("click", showAchievementsPage);
+sigilMessageButtons.forEach((button) => {
+  button.addEventListener("click", () => playSigilMessage(button.dataset.sigil));
+});
 advancedReturnButton.addEventListener("click", hideAdvancedPage);
 advancedAchievementsButton.addEventListener("click", showAchievementsPage);
 achievementsCloseButton.addEventListener("click", hideAchievementsPage);
@@ -339,6 +359,7 @@ async function startGame() {
 }
 
 function resetGame() {
+  stopSigilMessage();
   hideResult();
   hideAchievementsPage();
   hideAdvancedPage();
@@ -483,17 +504,52 @@ function renderMappings() {
 }
 
 function showResult(steps, elapsedMs, achieved) {
+  stopSigilMessage();
   resultTitleEl.textContent = achieved ? "Ritual Achieved" : "Ritual Incomplete, Try Again";
   resultStepsEl.textContent = steps;
   resultTimeEl.textContent = formatElapsed(elapsedMs);
   resultDetailEl.textContent = achieved
     ? "The sigil sequence reached its chosen goal."
     : "Press Start Again to attempt the ritual again.";
+  sigilMessagePanel.hidden = !achieved;
   resultOverlay.hidden = false;
 }
 
 function hideResult() {
+  stopSigilMessage();
   resultOverlay.hidden = true;
+}
+
+function playSigilMessage(sigil) {
+  const sources = sigilMessages[sigil];
+  if (!sources) {
+    return;
+  }
+
+  stopSigilMessage();
+  const src = sources[Math.floor(Math.random() * sources.length)];
+  const audio = new Audio(src);
+  state.activeSigilMessage = audio;
+  audio.addEventListener("ended", () => {
+    if (state.activeSigilMessage === audio) {
+      state.activeSigilMessage = null;
+    }
+  });
+  audio.play().catch(() => {
+    if (state.activeSigilMessage === audio) {
+      state.activeSigilMessage = null;
+    }
+  });
+}
+
+function stopSigilMessage() {
+  if (!state.activeSigilMessage) {
+    return;
+  }
+
+  state.activeSigilMessage.pause();
+  state.activeSigilMessage.currentTime = 0;
+  state.activeSigilMessage = null;
 }
 
 function showAchievementsPage() {

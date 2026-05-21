@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sigil Sequence Ritual</title>
-    <link rel="stylesheet" href="styles.css?v=21">
+    <link rel="stylesheet" href="styles.css?v=22">
   </head>
   <body>
     <main class="app" aria-labelledby="title">
@@ -97,6 +97,23 @@
             </span>
           </div>
           <p id="result-detail">Press Start to play again.</p>
+          <div class="sigil-message-panel" id="sigil-message-panel" hidden>
+            <h3>Select the Sigil message you want to hear</h3>
+            <div class="sigil-message-actions" aria-label="Sigil messages">
+              <button class="sigil-message-button" type="button" data-sigil="chaos" aria-label="Play Chaos sigil message">
+                <img src="assets/shapes/chaos.svg" alt="">
+              </button>
+              <button class="sigil-message-button" type="button" data-sigil="oracle" aria-label="Play Oracle sigil message">
+                <img src="assets/shapes/oracle.svg" alt="">
+              </button>
+              <button class="sigil-message-button" type="button" data-sigil="directive" aria-label="Play Directive sigil message">
+                <img src="assets/shapes/directive.svg" alt="">
+              </button>
+              <button class="sigil-message-button" type="button" data-sigil="sacred" aria-label="Play Sacred sigil message">
+                <img src="assets/shapes/sacred.svg" alt="">
+              </button>
+            </div>
+          </div>
           <div class="result-actions">
             <button id="result-start" type="button">Start Again</button>
             <button id="result-achievements" type="button">Sigil Sequence Hall of Fame</button>
@@ -118,6 +135,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=21"></script>
+    <script src="app.js?v=22"></script>
   </body>
 </html>
