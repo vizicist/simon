@@ -5,7 +5,7 @@ const subtitleEl = document.querySelector("#subtitle");
 const connectButton = document.querySelector("#connect");
 const learnButton = document.querySelector("#learn");
 const startButton = document.querySelector("#start");
-const hallOfFameButton = document.querySelector("#hall-of-fame");
+const hallOfFameChallengeButton = document.querySelector("#hall-of-fame-challenge");
 const advancedHotspot = document.querySelector("#advanced-hotspot");
 const resetButton = document.querySelector("#reset");
 const boardEl = document.querySelector(".board");
@@ -60,6 +60,7 @@ const playback = {
 };
 
 const responseTimeoutMs = 6000;
+const ritualGoalSteps = 8;
 
 const advancedAccess = {
   taps: 0,
@@ -68,7 +69,7 @@ const advancedAccess = {
 };
 
 const storageKeys = {
-  achievements: "sigil-sequence-achievements",
+  achievements: "sigil-sequence-achievements-v3",
   best: "bop-pad-simon-best",
   inputId: "bop-pad-simon-input-id",
   inputName: "bop-pad-simon-input-name",
@@ -76,6 +77,9 @@ const storageKeys = {
   sequenceGoal: "sigil-sequence-goal",
   sequenceTiming: "sigil-sequence-timing",
 };
+
+localStorage.removeItem("sigil-sequence-achievements");
+localStorage.removeItem("sigil-sequence-achievements-v2");
 
 const defaultPadNotes = [null, null, null, null];
 const loadedPadNotes = loadPadNotes();
@@ -100,7 +104,10 @@ const state = {
   padNotes: loadedPadNotes.notes,
   hasSavedMapping: loadedPadNotes.saved,
   sequenceGoal: loadSequenceGoal(),
+  activeSequenceGoal: ritualGoalSteps,
   sequenceTiming: loadSequenceTiming(),
+  recordHallOfFame: false,
+  lastStartMode: "ritual",
   activeSigilMessage: null,
 };
 
@@ -115,15 +122,15 @@ autoConnectMidi();
 
 connectButton.addEventListener("click", connectMidi);
 learnButton.addEventListener("click", startLearning);
-startButton.addEventListener("click", startGame);
-hallOfFameButton.addEventListener("click", showAchievementsPage);
+startButton.addEventListener("click", () => startGame("ritual"));
+hallOfFameChallengeButton.addEventListener("click", () => startGame("challenge"));
 if (resetButton) {
   resetButton.addEventListener("click", resetGame);
 }
 inputSelect.addEventListener("change", selectMidiInput);
 sequenceGoalSelect.addEventListener("change", updateSequenceGoal);
 sequenceTimingInput.addEventListener("input", updateSequenceTiming);
-resultStartButton.addEventListener("click", startGame);
+resultStartButton.addEventListener("click", () => startGame(state.lastStartMode));
 resultCloseButton.addEventListener("click", hideResult);
 resultAchievementsButton.addEventListener("click", showAchievementsPage);
 sigilMessageButtons.forEach((button) => {
@@ -335,7 +342,8 @@ function finishLearning() {
   }
 }
 
-async function startGame() {
+async function startGame(mode = "ritual") {
+  const isChallenge = mode === "challenge";
   hideResult();
   hideAchievementsPage();
   hideAdvancedPage();
@@ -352,6 +360,9 @@ async function startGame() {
   state.acceptingInput = false;
   state.gameActive = true;
   state.playingBack = false;
+  state.recordHallOfFame = isChallenge;
+  state.lastStartMode = mode;
+  state.activeSequenceGoal = isChallenge ? state.sequenceGoal : ritualGoalSteps;
   state.startedAt = Date.now();
   state.correctSteps = 0;
   updateStartButton();
@@ -379,6 +390,8 @@ function resetGame() {
   state.playingBack = false;
   state.learning = false;
   state.learnTarget = null;
+  state.recordHallOfFame = false;
+  state.activeSequenceGoal = ritualGoalSteps;
   state.startedAt = null;
   state.correctSteps = 0;
   pads.forEach((pad) => pad.classList.remove("learn-target", "learned"));
@@ -485,7 +498,9 @@ function endGame(achieved = false) {
   updateStartButton();
   const score = Math.max(0, state.sequence.length - 1);
   const elapsedMs = state.startedAt ? Date.now() - state.startedAt : 0;
-  saveAchievement(state.correctSteps, elapsedMs, achieved);
+  if (state.recordHallOfFame) {
+    saveAchievement(state.correctSteps, elapsedMs, achieved);
+  }
   const isNewBest = score > state.best;
   if (isNewBest) {
     state.best = score;
@@ -594,7 +609,7 @@ function saveAchievement(steps, elapsedMs, achieved) {
     achieved,
     elapsedMs,
     finishedAt: new Date().toISOString(),
-    goal: state.sequenceGoal,
+    goal: state.activeSequenceGoal,
     steps,
   });
 
@@ -605,7 +620,7 @@ function saveAchievement(steps, elapsedMs, achieved) {
 }
 
 function isSequenceGoalReached() {
-  return state.sequenceGoal !== "unlimited" && state.sequence.length >= state.sequenceGoal;
+  return state.activeSequenceGoal !== "unlimited" && state.sequence.length >= state.activeSequenceGoal;
 }
 
 function updateSequenceGoal() {
@@ -714,7 +729,12 @@ function syncLearningDisplay() {
 }
 
 function updateStartButton() {
-  startButton.textContent = state.gameActive ? "Restart" : "Start";
+  startButton.textContent = state.gameActive && state.lastStartMode === "ritual"
+    ? "Restart Ritual (8 steps)"
+    : "Start Ritual (8 steps)";
+  hallOfFameChallengeButton.textContent = state.gameActive && state.lastStartMode === "challenge"
+    ? "Restart Hall of Fame Challenge"
+    : "Hall of Fame Challenge";
 }
 
 function requestMainKioskOnce() {
@@ -808,11 +828,11 @@ function createCountdownOverlay() {
 }
 
 function getCountdownGoalText() {
-  if (state.sequenceGoal === "unlimited") {
+  if (state.activeSequenceGoal === "unlimited") {
     return "Complete as Many Steps as You Can";
   }
 
-  return `Finish ${state.sequenceGoal} Steps to Complete the Ritual`;
+  return `Finish ${state.activeSequenceGoal} Steps to Complete the Ritual`;
 }
 
 function loadPadNotes() {
