@@ -808,15 +808,15 @@ function renderAchievements() {
     rank.className = "achievement-rank";
     rank.textContent = `#${index + 1}`;
 
-    const time = document.createElement("strong");
-    time.className = "achievement-time";
-    time.textContent = formatElapsed(achievement.elapsedMs);
-
-    const steps = document.createElement("span");
+    const steps = document.createElement("strong");
     steps.className = "achievement-steps";
     steps.textContent = `${achievement.steps} steps`;
 
-    item.append(rank, time, steps);
+    const time = document.createElement("span");
+    time.className = "achievement-time";
+    time.textContent = formatElapsed(achievement.elapsedMs);
+
+    item.append(rank, steps, time);
     achievementList.append(item);
   });
 }

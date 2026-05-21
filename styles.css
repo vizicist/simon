@@ -681,16 +681,16 @@ p {
 }
 
 .achievement-time {
-  color: var(--text);
-  font-size: clamp(1.15rem, 3.2vw, 2rem);
+  color: var(--muted);
+  font-size: clamp(0.82rem, 1.8vw, 1.04rem);
   font-weight: 400;
   line-height: 1;
 }
 
 .achievement-steps {
-  color: var(--muted);
-  font-size: clamp(0.82rem, 1.8vw, 1.04rem);
-  font-weight: 400;
+  color: var(--text);
+  font-size: clamp(1.15rem, 3.2vw, 2rem);
+  font-weight: 700;
   text-transform: uppercase;
 }
 
