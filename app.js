@@ -93,6 +93,7 @@ advancedReturnButton.addEventListener("click", hideAdvancedPage);
 window.addEventListener("pointerdown", beginAdvancedGesture);
 window.addEventListener("pointerup", finishAdvancedGesture);
 window.addEventListener("pointercancel", cancelAdvancedGesture);
+window.addEventListener("pointerdown", requestMainKioskOnce, { once: true });
 
 pads.forEach((pad) => {
   pad.addEventListener("pointerdown", () => {
@@ -321,6 +322,7 @@ function finishLearning() {
 function startGame() {
   hideResult();
   hideAdvancedPage();
+  enterKioskMode();
   cancelPendingRound();
   state.runId += 1;
   state.learning = false;
@@ -342,6 +344,7 @@ function startGame() {
 function resetGame() {
   hideResult();
   hideAdvancedPage();
+  enterKioskMode();
   cancelPendingRound();
   state.runId += 1;
   state.sequence = [];
@@ -474,10 +477,12 @@ function hideResult() {
 
 function showAdvancedPage() {
   advancedPage.hidden = false;
+  exitKioskMode();
 }
 
 function hideAdvancedPage() {
   advancedPage.hidden = true;
+  enterKioskMode();
 }
 
 function syncLearningDisplay() {
@@ -486,6 +491,50 @@ function syncLearningDisplay() {
 
 function updateStartButton() {
   startButton.textContent = state.gameActive ? "Restart" : "Start";
+}
+
+function requestMainKioskOnce() {
+  if (advancedPage.hidden && resultOverlay.hidden) {
+    enterKioskMode();
+  }
+}
+
+async function enterKioskMode() {
+  const requestFullscreen = document.documentElement.requestFullscreen
+    || document.documentElement.webkitRequestFullscreen
+    || document.documentElement.msRequestFullscreen;
+
+  if (getFullscreenElement() || !requestFullscreen) {
+    return;
+  }
+
+  try {
+    await requestFullscreen.call(document.documentElement);
+  } catch {
+    // Fullscreen is browser-gated and may require a direct user gesture.
+  }
+}
+
+async function exitKioskMode() {
+  const exitFullscreen = document.exitFullscreen
+    || document.webkitExitFullscreen
+    || document.msExitFullscreen;
+
+  if (!getFullscreenElement() || !exitFullscreen) {
+    return;
+  }
+
+  try {
+    await exitFullscreen.call(document);
+  } catch {
+    // Ignore transient fullscreen state changes.
+  }
+}
+
+function getFullscreenElement() {
+  return document.fullscreenElement
+    || document.webkitFullscreenElement
+    || document.msFullscreenElement;
 }
 
 function beginAdvancedGesture(event) {
