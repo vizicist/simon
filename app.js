@@ -671,7 +671,7 @@ function loadAchievements() {
 
 function sortAchievements(achievements) {
   return [...achievements].sort((a, b) => {
-    return b.elapsedMs - a.elapsedMs || b.steps - a.steps;
+    return b.steps - a.steps || a.elapsedMs - b.elapsedMs;
   });
 }
 
