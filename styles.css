@@ -142,7 +142,8 @@ p {
   cursor: pointer;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.26), transparent 44%),
+    radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.3), transparent 44%),
+    linear-gradient(140deg, rgba(255, 255, 255, 0.2), transparent 46%),
     var(--pad-color);
   transform: translateY(0);
   transition: filter 120ms ease, transform 120ms ease, box-shadow 120ms ease;
@@ -152,7 +153,7 @@ p {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.26), transparent 52%);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.16), transparent 52%);
   pointer-events: none;
 }
 
@@ -189,22 +190,22 @@ p {
 }
 
 .pad-green {
-  --pad-color: rgba(184, 210, 162, 0.62);
+  --pad-color: #44d05b;
   border-radius: 100% 0 0 0;
 }
 
 .pad-red {
-  --pad-color: rgba(223, 180, 154, 0.58);
+  --pad-color: #f1563f;
   border-radius: 0 100% 0 0;
 }
 
 .pad-yellow {
-  --pad-color: rgba(232, 210, 141, 0.58);
+  --pad-color: #f2c83d;
   border-radius: 0 0 0 100%;
 }
 
 .pad-blue {
-  --pad-color: rgba(174, 201, 220, 0.58);
+  --pad-color: #3f95f1;
   border-radius: 0 0 100% 0;
 }
 
