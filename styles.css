@@ -63,32 +63,10 @@ p {
   color: var(--muted);
 }
 
-.scoreboard {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.scoreboard span,
 .midi-panel,
 .controls button {
   background: rgba(26, 29, 34, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.scoreboard span {
-  min-width: 92px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  color: var(--muted);
-}
-
-.scoreboard strong {
-  display: block;
-  margin-top: 2px;
-  color: var(--text);
-  font-size: 1.45rem;
 }
 
 .board {
@@ -438,10 +416,6 @@ select {
   .status-bar {
     display: grid;
     align-items: start;
-  }
-
-  .scoreboard {
-    justify-content: start;
   }
 
   .board {

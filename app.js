@@ -63,7 +63,9 @@ const state = {
   hasSavedMapping: loadedPadNotes.saved,
 };
 
-bestEl.textContent = state.best;
+if (bestEl) {
+  bestEl.textContent = state.best;
+}
 renderMappings();
 setStartupMessage();
 syncLearningDisplay();
@@ -411,7 +413,9 @@ function endGame() {
   if (isNewBest) {
     state.best = score;
     localStorage.setItem(storageKeys.best, String(score));
-    bestEl.textContent = score;
+    if (bestEl) {
+      bestEl.textContent = score;
+    }
     setMessage("New best", "Press Start to play again.");
   } else {
     setMessage("Missed", "Press Start to try again.");
@@ -421,7 +425,9 @@ function endGame() {
 }
 
 function updateRound() {
-  roundEl.textContent = state.sequence.length;
+  if (roundEl) {
+    roundEl.textContent = state.sequence.length;
+  }
 }
 
 function renderMappings() {
