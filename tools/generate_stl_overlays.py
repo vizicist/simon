@@ -19,6 +19,14 @@ BASE_THICKNESS_MM = 1.2
 RELIEF_HEIGHT_MM = 0.9
 GRID_CELLS = 180
 SIGIL_SIZE_MM = 58.0
+UI_DEFAULT_SHAPE_SIZE = 68.0
+
+SIGIL_SIZE_MULTIPLIERS = {
+    "chaos": 78.0 / UI_DEFAULT_SHAPE_SIZE,
+    "oracle": 1.0,
+    "directive": 1.0,
+    "sacred": 82.0 / UI_DEFAULT_SHAPE_SIZE,
+}
 
 QUADRANTS = {
     "chaos": "top_left",
@@ -283,7 +291,7 @@ def is_inside_quadrant(x_mm: float, y_mm: float, quadrant: str) -> bool:
     return dx * dx + dy * dy <= radius * radius
 
 
-def make_sigil_mask(svg_path: Path, cells: int, quadrant: str) -> Image.Image:
+def make_sigil_mask(svg_path: Path, cells: int, quadrant: str, sigil_size_mm: float) -> Image.Image:
     path_groups = load_svg_paths(svg_path)
     polygons = [poly for group in path_groups for poly in group]
     points = [point for poly in polygons for point in poly]
@@ -294,7 +302,7 @@ def make_sigil_mask(svg_path: Path, cells: int, quadrant: str) -> Image.Image:
     width = max_x - min_x
     height = max_y - min_y
 
-    scale = (SIGIL_SIZE_MM / OVERLAY_WIDTH_MM * cells) / max(width, height)
+    scale = (sigil_size_mm / OVERLAY_WIDTH_MM * cells) / max(width, height)
     center = quadrant_center(quadrant)
     center_px = (center[0] / OVERLAY_WIDTH_MM * cells, (1 - center[1] / OVERLAY_WIDTH_MM) * cells)
 
@@ -401,10 +409,11 @@ def main():
     OUTPUT_DIR.mkdir(exist_ok=True)
     for name in ["chaos", "oracle", "directive", "sacred"]:
         quadrant = QUADRANTS[name]
-        mask = make_sigil_mask(SHAPE_DIR / f"{name}.svg", GRID_CELLS, quadrant)
+        sigil_size_mm = SIGIL_SIZE_MM * SIGIL_SIZE_MULTIPLIERS[name]
+        mask = make_sigil_mask(SHAPE_DIR / f"{name}.svg", GRID_CELLS, quadrant, sigil_size_mm)
         triangles = build_overlay(mask, quadrant)
         write_binary_stl(OUTPUT_DIR / f"sigil_overlay_{name}.stl", triangles)
-        print(f"{name} ({quadrant}): {len(triangles)} triangles")
+        print(f"{name} ({quadrant}, {sigil_size_mm:.2f}mm sigil): {len(triangles)} triangles")
 
 
 if __name__ == "__main__":
