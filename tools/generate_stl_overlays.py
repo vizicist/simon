@@ -20,6 +20,13 @@ RELIEF_HEIGHT_MM = 0.9
 GRID_CELLS = 180
 SIGIL_SIZE_MM = 58.0
 
+QUADRANTS = {
+    "chaos": "top_left",
+    "oracle": "top_right",
+    "directive": "bottom_left",
+    "sacred": "bottom_right",
+}
+
 TOKEN_RE = re.compile(r"[MmZzLlHhVvCcSsQqTtAa]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
 
 
@@ -233,7 +240,39 @@ def load_svg_polygons(svg_path: Path) -> list[list[tuple[float, float]]]:
     return polygons
 
 
-def make_sigil_mask(svg_path: Path, cells: int) -> Image.Image:
+def quadrant_center(quadrant: str) -> tuple[float, float]:
+    offset = 4 * OVERLAY_WIDTH_MM / (3 * math.pi)
+    if quadrant == "top_left":
+        return (OVERLAY_WIDTH_MM - offset, offset)
+    if quadrant == "top_right":
+        return (offset, offset)
+    if quadrant == "bottom_left":
+        return (OVERLAY_WIDTH_MM - offset, OVERLAY_WIDTH_MM - offset)
+    if quadrant == "bottom_right":
+        return (offset, OVERLAY_WIDTH_MM - offset)
+    raise ValueError(f"Unknown quadrant: {quadrant}")
+
+
+def is_inside_quadrant(x_mm: float, y_mm: float, quadrant: str) -> bool:
+    radius = OVERLAY_WIDTH_MM
+    if quadrant == "top_left":
+        dx = radius - x_mm
+        dy = y_mm
+    elif quadrant == "top_right":
+        dx = x_mm
+        dy = y_mm
+    elif quadrant == "bottom_left":
+        dx = radius - x_mm
+        dy = radius - y_mm
+    elif quadrant == "bottom_right":
+        dx = x_mm
+        dy = radius - y_mm
+    else:
+        raise ValueError(f"Unknown quadrant: {quadrant}")
+    return dx * dx + dy * dy <= radius * radius
+
+
+def make_sigil_mask(svg_path: Path, cells: int, quadrant: str) -> Image.Image:
     polygons = load_svg_polygons(svg_path)
     points = [point for poly in polygons for point in poly]
     min_x = min(p[0] for p in points)
@@ -244,7 +283,7 @@ def make_sigil_mask(svg_path: Path, cells: int) -> Image.Image:
     height = max_y - min_y
 
     scale = (SIGIL_SIZE_MM / OVERLAY_WIDTH_MM * cells) / max(width, height)
-    center = (4 * OVERLAY_WIDTH_MM / (3 * math.pi), 4 * OVERLAY_WIDTH_MM / (3 * math.pi))
+    center = quadrant_center(quadrant)
     center_px = (center[0] / OVERLAY_WIDTH_MM * cells, (1 - center[1] / OVERLAY_WIDTH_MM) * cells)
 
     mask = Image.new("L", (cells, cells), 0)
@@ -289,7 +328,7 @@ def write_binary_stl(path: Path, triangles):
             fh.write(struct.pack("<H", 0))
 
 
-def build_overlay(mask: Image.Image):
+def build_overlay(mask: Image.Image, quadrant: str):
     cells = GRID_CELLS
     cell = OVERLAY_WIDTH_MM / cells
     inside = [[False] * cells for _ in range(cells)]
@@ -299,7 +338,7 @@ def build_overlay(mask: Image.Image):
         for x in range(cells):
             cx = (x + 0.5) * cell
             cy = (y + 0.5) * cell
-            if cx * cx + cy * cy <= OVERLAY_WIDTH_MM * OVERLAY_WIDTH_MM:
+            if is_inside_quadrant(cx, cy, quadrant):
                 inside[y][x] = True
                 mask_y = cells - 1 - y
                 raised = pixels[x, mask_y] > 0
@@ -342,10 +381,11 @@ def build_overlay(mask: Image.Image):
 def main():
     OUTPUT_DIR.mkdir(exist_ok=True)
     for name in ["chaos", "oracle", "directive", "sacred"]:
-        mask = make_sigil_mask(SHAPE_DIR / f"{name}.svg", GRID_CELLS)
-        triangles = build_overlay(mask)
+        quadrant = QUADRANTS[name]
+        mask = make_sigil_mask(SHAPE_DIR / f"{name}.svg", GRID_CELLS, quadrant)
+        triangles = build_overlay(mask, quadrant)
         write_binary_stl(OUTPUT_DIR / f"sigil_overlay_{name}.stl", triangles)
-        print(f"{name}: {len(triangles)} triangles")
+        print(f"{name} ({quadrant}): {len(triangles)} triangles")
 
 
 if __name__ == "__main__":

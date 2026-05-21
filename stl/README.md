@@ -11,9 +11,9 @@ These STL files are quadrant overlays for the physical Bop Pad.
 
 Files:
 
-- `sigil_overlay_chaos.stl`
-- `sigil_overlay_oracle.stl`
-- `sigil_overlay_directive.stl`
-- `sigil_overlay_sacred.stl`
+- `sigil_overlay_chaos.stl`: top-left quadrant
+- `sigil_overlay_oracle.stl`: top-right quadrant
+- `sigil_overlay_directive.stl`: bottom-left quadrant
+- `sigil_overlay_sacred.stl`: bottom-right quadrant
 
-Each overlay is generated from the matching SVG in `assets/shapes`. Rotate the printed quadrant as needed for the physical pad zone.
+Each overlay is generated from the matching SVG in `assets/shapes` and is already oriented for the full pad layout shown in the browser UI.
