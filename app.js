@@ -547,9 +547,7 @@ function renderMappings() {
 function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   stopSigilMessage();
   state.lastRunAchieved = achieved;
-  resultTitleEl.textContent = hallOfFameResult
-    ? "Challenge Complete"
-    : achieved ? "Ritual Achieved" : "Ritual Incomplete";
+  resultTitleEl.textContent = getResultTitle(achieved, hallOfFameResult);
   resultStepsEl.textContent = steps;
   resultTimeEl.textContent = formatElapsed(elapsedMs);
   resultDetailEl.textContent = getResultDetail(achieved, hallOfFameResult);
@@ -562,9 +560,21 @@ function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   resultOverlay.hidden = false;
 }
 
+function getResultTitle(achieved, hallOfFameResult) {
+  if (hallOfFameResult?.qualified) {
+    return `Hall of Fame! #${hallOfFameResult.rank}`;
+  }
+
+  if (hallOfFameResult) {
+    return "Challenge Complete";
+  }
+
+  return achieved ? "Ritual Achieved" : "Ritual Incomplete";
+}
+
 function getResultDetail(achieved, hallOfFameResult) {
   if (hallOfFameResult?.qualified) {
-    return `Good enough for the Hall of Fame: #${hallOfFameResult.rank}.`;
+    return "Excellent sequence. Your name enters the record.";
   }
 
   if (hallOfFameResult) {
