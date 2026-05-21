@@ -1,9 +1,6 @@
 const pads = Array.from(document.querySelectorAll(".pad"));
 const roundEl = document.querySelector("#round");
 const bestEl = document.querySelector("#best");
-const messageEl = document.querySelector("#message");
-const countdownEl = document.querySelector("#countdown");
-const centerPanel = document.querySelector(".center-panel");
 const subtitleEl = document.querySelector("#subtitle");
 const connectButton = document.querySelector("#connect");
 const learnButton = document.querySelector("#learn");
@@ -91,7 +88,6 @@ if (bestEl) {
 }
 renderMappings();
 renderSequenceGoal();
-setStartupMessage();
 syncLearningDisplay();
 autoConnectMidi();
 
@@ -141,18 +137,8 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
-function setMessage(message, subtitle, countdown = "") {
-  messageEl.textContent = message;
-  countdownEl.textContent = countdown;
-  centerPanel.classList.toggle("is-empty", !message && !countdown);
-  if (subtitle) {
-    subtitleEl.textContent = subtitle;
-  }
-}
-
 async function connectMidi() {
   if (!navigator.requestMIDIAccess) {
-    setMessage("No Web MIDI", "Use Chrome or Edge with the Bop Pad connected over USB MIDI.");
     midiStateEl.textContent = "Web MIDI is unavailable in this browser";
     return;
   }
@@ -162,7 +148,6 @@ async function connectMidi() {
     state.access.addEventListener("statechange", refreshInputs);
     refreshInputs();
   } catch (error) {
-    setMessage("MIDI blocked", "Allow MIDI permission in the browser and try again.");
     midiStateEl.textContent = error.message;
   }
 }
@@ -273,19 +258,16 @@ function startLearning() {
   pads.forEach((pad) => pad.classList.remove("learn-target"));
   learnButton.textContent = "Done";
   syncLearningDisplay();
-  setMessage("Pick a pad", "Tap an on-screen color, then strike the matching Bop Pad pad.");
 }
 
 function selectLearnTarget(index) {
   state.learnTarget = index;
   pads.forEach((pad) => pad.classList.toggle("learn-target", Number(pad.dataset.pad) === index));
   flashPad(index);
-  setMessage(`Map ${colors[index]}`, "Now strike the matching physical Bop Pad pad.");
 }
 
 function learnNote(note, velocity = 96) {
   if (state.learnTarget === null) {
-    setMessage("Pick a pad", "Tap an on-screen color first, then strike the matching Bop Pad pad.");
     return;
   }
 
@@ -306,8 +288,6 @@ function learnNote(note, velocity = 96) {
   savePadNotes();
 
   if (!isValidPadNotes(state.padNotes)) {
-    const remaining = 4 - state.padNotes.filter(Number.isInteger).length;
-    setMessage("Pad saved", `${remaining} more to map. Pick another on-screen pad.`);
     return;
   }
 
@@ -316,7 +296,6 @@ function learnNote(note, velocity = 96) {
     return;
   }
 
-  setMessage("Pad saved", "Pick another on-screen pad, or press Done.");
 }
 
 function finishLearning() {
@@ -327,9 +306,6 @@ function finishLearning() {
   syncLearningDisplay();
   if (isValidPadNotes(state.padNotes)) {
     savePadNotes();
-    setMessage("Pads saved", "This mapping will load automatically after future reloads.");
-  } else {
-    setMessage("Mapping incomplete", "Pick Learn Pads to finish mapping all four pads.");
   }
 }
 
@@ -383,7 +359,6 @@ function resetGame() {
   syncLearningDisplay();
   updateStartButton();
   updateRound();
-  setStartupMessage();
 }
 
 function addRound() {
@@ -396,7 +371,6 @@ function addRound() {
 
 async function playSequence(runId) {
   state.playingBack = true;
-  setMessage("");
   learnButton.disabled = true;
 
   await wait(playback.introDelay);
@@ -421,24 +395,23 @@ async function playSequence(runId) {
   state.playingBack = false;
   state.acceptingInput = true;
   learnButton.disabled = false;
-  setMessage("Your turn");
 }
 
 async function runStartCountdown(runId) {
   const beats = ["3", "2", "1", "GO"];
+  const countdownOverlay = createCountdownOverlay();
 
   for (const beat of beats) {
     if (runId !== state.runId) {
+      countdownOverlay.remove();
       return;
     }
 
-    setMessage("Match the Sigil Sequence", null, beat);
+    countdownOverlay.querySelector(".countdown-beat").textContent = beat;
     await wait(beat === "GO" ? 650 : 850);
   }
 
-  if (runId === state.runId) {
-    setMessage("");
-  }
+  countdownOverlay.remove();
 }
 
 function handlePad(padIndex, velocity = 96) {
@@ -469,7 +442,6 @@ function handlePad(padIndex, velocity = 96) {
       return;
     }
 
-    setMessage("Nice");
     state.nextRoundTimer = setTimeout(addRound, 680);
   }
 }
@@ -488,9 +460,6 @@ function endGame(achieved = false) {
     if (bestEl) {
       bestEl.textContent = score;
     }
-    setMessage("");
-  } else {
-    setMessage("");
   }
 
   showResult(state.correctSteps, elapsedMs, achieved);
@@ -718,8 +687,20 @@ function formatElapsed(ms) {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-function setStartupMessage() {
-  setMessage("", "");
+function createCountdownOverlay() {
+  const overlay = document.createElement("div");
+  overlay.className = "countdown-overlay";
+
+  const message = document.createElement("span");
+  message.className = "countdown-message";
+  message.textContent = "Match the Sigil Sequence";
+
+  const beat = document.createElement("strong");
+  beat.className = "countdown-beat";
+
+  overlay.append(message, beat);
+  document.body.append(overlay);
+  return overlay;
 }
 
 function loadPadNotes() {
