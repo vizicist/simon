@@ -694,7 +694,7 @@ function normalizeSequenceGoal(value) {
   }
 
   const numericValue = Number(value);
-  if (Number.isInteger(numericValue) && numericValue >= 3 && numericValue <= 20) {
+  if (Number.isInteger(numericValue) && numericValue >= 2 && numericValue <= 20) {
     return numericValue;
   }
 
