@@ -295,7 +295,7 @@ p {
 
 .controls {
   width: min(1120px, 100%);
-  margin: clamp(8px, 2vh, 18px) auto 0;
+  margin: clamp(0px, 0.6vh, 8px) auto 0;
 }
 
 .midi-panel {
@@ -336,7 +336,8 @@ p {
   display: grid;
   grid-template-columns: repeat(2, minmax(320px, 520px));
   justify-content: center;
-  gap: 10px;
+  column-gap: 10px;
+  row-gap: clamp(18px, 3vh, 34px);
 }
 
 .controls button,
