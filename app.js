@@ -17,8 +17,14 @@ const resultTimeEl = document.querySelector("#result-time");
 const resultDetailEl = document.querySelector("#result-detail");
 const resultStartButton = document.querySelector("#result-start");
 const resultCloseButton = document.querySelector("#result-close");
+const resultAchievementsButton = document.querySelector("#result-achievements");
 const advancedPage = document.querySelector("#advanced-page");
 const advancedReturnButton = document.querySelector("#advanced-return");
+const advancedAchievementsButton = document.querySelector("#advanced-achievements");
+const achievementsPage = document.querySelector("#achievements-page");
+const achievementList = document.querySelector("#achievement-list");
+const achievementEmpty = document.querySelector("#achievement-empty");
+const achievementsCloseButton = document.querySelector("#achievements-close");
 
 const colors = ["green", "red", "yellow", "blue"];
 const keyMap = new Map([
@@ -43,6 +49,7 @@ const advancedGesture = {
 };
 
 const storageKeys = {
+  achievements: "sigil-sequence-achievements",
   best: "bop-pad-simon-best",
   inputId: "bop-pad-simon-input-id",
   inputName: "bop-pad-simon-input-name",
@@ -89,7 +96,10 @@ if (resetButton) {
 inputSelect.addEventListener("change", selectMidiInput);
 resultStartButton.addEventListener("click", startGame);
 resultCloseButton.addEventListener("click", hideResult);
+resultAchievementsButton.addEventListener("click", showAchievementsPage);
 advancedReturnButton.addEventListener("click", hideAdvancedPage);
+advancedAchievementsButton.addEventListener("click", showAchievementsPage);
+achievementsCloseButton.addEventListener("click", hideAchievementsPage);
 window.addEventListener("pointerdown", beginAdvancedGesture);
 window.addEventListener("pointerup", finishAdvancedGesture);
 window.addEventListener("pointercancel", cancelAdvancedGesture);
@@ -321,6 +331,7 @@ function finishLearning() {
 
 function startGame() {
   hideResult();
+  hideAchievementsPage();
   hideAdvancedPage();
   enterKioskMode();
   cancelPendingRound();
@@ -343,6 +354,7 @@ function startGame() {
 
 function resetGame() {
   hideResult();
+  hideAchievementsPage();
   hideAdvancedPage();
   enterKioskMode();
   cancelPendingRound();
@@ -436,6 +448,7 @@ function endGame() {
   updateStartButton();
   const score = Math.max(0, state.sequence.length - 1);
   const elapsedMs = state.startedAt ? Date.now() - state.startedAt : 0;
+  saveAchievement(state.correctSteps, elapsedMs);
   const isNewBest = score > state.best;
   if (isNewBest) {
     state.best = score;
@@ -475,6 +488,16 @@ function hideResult() {
   resultOverlay.hidden = true;
 }
 
+function showAchievementsPage() {
+  renderAchievements();
+  achievementsPage.hidden = false;
+  exitKioskMode();
+}
+
+function hideAchievementsPage() {
+  achievementsPage.hidden = true;
+}
+
 function showAdvancedPage() {
   advancedPage.hidden = false;
   exitKioskMode();
@@ -483,6 +506,67 @@ function showAdvancedPage() {
 function hideAdvancedPage() {
   advancedPage.hidden = true;
   enterKioskMode();
+}
+
+function saveAchievement(steps, elapsedMs) {
+  const achievements = loadAchievements();
+  achievements.push({
+    elapsedMs,
+    finishedAt: new Date().toISOString(),
+    steps,
+  });
+
+  localStorage.setItem(
+    storageKeys.achievements,
+    JSON.stringify(sortAchievements(achievements).slice(0, 5)),
+  );
+}
+
+function renderAchievements() {
+  const achievements = sortAchievements(loadAchievements()).slice(0, 5);
+  achievementList.replaceChildren();
+  achievementEmpty.hidden = achievements.length > 0;
+
+  achievements.forEach((achievement, index) => {
+    const item = document.createElement("li");
+
+    const rank = document.createElement("span");
+    rank.className = "achievement-rank";
+    rank.textContent = `#${index + 1}`;
+
+    const time = document.createElement("strong");
+    time.className = "achievement-time";
+    time.textContent = formatElapsed(achievement.elapsedMs);
+
+    const steps = document.createElement("span");
+    steps.className = "achievement-steps";
+    steps.textContent = `${achievement.steps} steps`;
+
+    item.append(rank, time, steps);
+    achievementList.append(item);
+  });
+}
+
+function loadAchievements() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(storageKeys.achievements) || "[]");
+    if (Array.isArray(parsed)) {
+      return parsed.filter((achievement) => {
+        return Number.isFinite(achievement.elapsedMs)
+          && Number.isInteger(achievement.steps);
+      });
+    }
+  } catch {
+    localStorage.removeItem(storageKeys.achievements);
+  }
+
+  return [];
+}
+
+function sortAchievements(achievements) {
+  return [...achievements].sort((a, b) => {
+    return b.elapsedMs - a.elapsedMs || b.steps - a.steps;
+  });
 }
 
 function syncLearningDisplay() {
