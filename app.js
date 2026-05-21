@@ -510,10 +510,10 @@ function endGame(achieved = false) {
   state.acceptingInput = false;
   state.gameActive = false;
   updateStartButton();
-  const score = Math.max(0, state.sequence.length - 1);
+  const score = getAchievedSequenceLength(achieved);
   const elapsedMs = state.startedAt ? Date.now() - state.startedAt : 0;
   if (state.recordHallOfFame) {
-    saveAchievement(state.correctSteps, elapsedMs, achieved);
+    saveAchievement(score, elapsedMs, achieved);
   }
   const isNewBest = score > state.best;
   if (isNewBest) {
@@ -524,7 +524,19 @@ function endGame(achieved = false) {
     }
   }
 
-  showResult(state.correctSteps, elapsedMs, achieved);
+  showResult(score, elapsedMs, achieved);
+}
+
+function getAchievedSequenceLength(achieved) {
+  if (achieved) {
+    return state.sequence.length;
+  }
+
+  if (state.playerIndex === state.sequence.length && state.sequence.length > 0) {
+    return state.sequence.length;
+  }
+
+  return Math.max(0, state.sequence.length - 1);
 }
 
 function completeRitual() {
