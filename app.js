@@ -17,6 +17,8 @@ const resultTimeEl = document.querySelector("#result-time");
 const resultDetailEl = document.querySelector("#result-detail");
 const resultStartButton = document.querySelector("#result-start");
 const resultCloseButton = document.querySelector("#result-close");
+const advancedPage = document.querySelector("#advanced-page");
+const advancedReturnButton = document.querySelector("#advanced-return");
 
 const colors = ["green", "red", "yellow", "blue"];
 const keyMap = new Map([
@@ -32,6 +34,12 @@ const playback = {
   gapMs: 260,
   minGapMs: 190,
   speedupPerRoundMs: 4,
+};
+
+const advancedGesture = {
+  cornerSize: 92,
+  minDistanceRatio: 0.72,
+  startCorner: null,
 };
 
 const storageKeys = {
@@ -78,6 +86,10 @@ resetButton.addEventListener("click", resetGame);
 inputSelect.addEventListener("change", selectMidiInput);
 resultStartButton.addEventListener("click", startGame);
 resultCloseButton.addEventListener("click", hideResult);
+advancedReturnButton.addEventListener("click", hideAdvancedPage);
+window.addEventListener("pointerdown", beginAdvancedGesture);
+window.addEventListener("pointerup", finishAdvancedGesture);
+window.addEventListener("pointercancel", cancelAdvancedGesture);
 
 pads.forEach((pad) => {
   pad.addEventListener("pointerdown", () => {
@@ -227,6 +239,7 @@ function startLearning() {
   }
 
   hideResult();
+  showAdvancedPage();
   cancelPendingRound();
   state.runId += 1;
   state.learning = true;
@@ -302,6 +315,7 @@ function finishLearning() {
 
 function startGame() {
   hideResult();
+  hideAdvancedPage();
   cancelPendingRound();
   state.runId += 1;
   state.learning = false;
@@ -320,6 +334,7 @@ function startGame() {
 
 function resetGame() {
   hideResult();
+  hideAdvancedPage();
   cancelPendingRound();
   state.runId += 1;
   state.sequence = [];
@@ -448,8 +463,76 @@ function hideResult() {
   resultOverlay.hidden = true;
 }
 
+function showAdvancedPage() {
+  advancedPage.hidden = false;
+}
+
+function hideAdvancedPage() {
+  advancedPage.hidden = true;
+}
+
 function syncLearningDisplay() {
   boardEl.classList.toggle("is-learning", state.learning);
+}
+
+function beginAdvancedGesture(event) {
+  if (!advancedPage.hidden || !resultOverlay.hidden) {
+    return;
+  }
+
+  advancedGesture.startCorner = getCorner(event.clientX, event.clientY);
+}
+
+function finishAdvancedGesture(event) {
+  if (!advancedGesture.startCorner) {
+    return;
+  }
+
+  const startCorner = advancedGesture.startCorner;
+  advancedGesture.startCorner = null;
+  const endCorner = getCorner(event.clientX, event.clientY);
+  const diagonalDistance = Math.hypot(window.innerWidth, window.innerHeight);
+  const traveled = Math.hypot(event.clientX - startCorner.x, event.clientY - startCorner.y);
+
+  if (endCorner && isOppositeCorner(startCorner, endCorner) && traveled >= diagonalDistance * advancedGesture.minDistanceRatio) {
+    showAdvancedPage();
+  }
+}
+
+function cancelAdvancedGesture() {
+  advancedGesture.startCorner = null;
+}
+
+function getCorner(x, y) {
+  const nearLeft = x <= advancedGesture.cornerSize;
+  const nearRight = x >= window.innerWidth - advancedGesture.cornerSize;
+  const nearTop = y <= advancedGesture.cornerSize;
+  const nearBottom = y >= window.innerHeight - advancedGesture.cornerSize;
+
+  if (nearLeft && nearTop) {
+    return { name: "top-left", x: 0, y: 0 };
+  }
+
+  if (nearRight && nearTop) {
+    return { name: "top-right", x: window.innerWidth, y: 0 };
+  }
+
+  if (nearLeft && nearBottom) {
+    return { name: "bottom-left", x: 0, y: window.innerHeight };
+  }
+
+  if (nearRight && nearBottom) {
+    return { name: "bottom-right", x: window.innerWidth, y: window.innerHeight };
+  }
+
+  return null;
+}
+
+function isOppositeCorner(startCorner, endCorner) {
+  return (startCorner.name === "top-left" && endCorner.name === "bottom-right")
+    || (startCorner.name === "bottom-right" && endCorner.name === "top-left")
+    || (startCorner.name === "top-right" && endCorner.name === "bottom-left")
+    || (startCorner.name === "bottom-left" && endCorner.name === "top-right");
 }
 
 function formatElapsed(ms) {

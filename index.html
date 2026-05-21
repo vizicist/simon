@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sigil Simon</title>
-    <link rel="stylesheet" href="styles.css?v=4">
+    <link rel="stylesheet" href="styles.css?v=5">
   </head>
   <body>
     <main class="app" aria-labelledby="title">
@@ -12,7 +12,7 @@
         <div class="status-bar">
           <div>
             <h1 id="title">Sigil Simon</h1>
-            <p id="subtitle">Connect your MIDI device, learn the four pads, then repeat the pattern.</p>
+            <p id="subtitle">Repeat the pattern using the four Bop Pad zones.</p>
           </div>
         </div>
 
@@ -39,16 +39,24 @@
         </div>
 
         <div class="controls" aria-label="Game controls">
-          <button id="connect" type="button">Connect MIDI</button>
-          <button id="learn" type="button">Learn Pads</button>
           <button id="start" type="button">Start</button>
           <button id="reset" type="button" title="Stop the current run. Saved pad mappings and best score stay saved.">Reset</button>
         </div>
+      </section>
 
+      <section class="advanced-page" id="advanced-page" aria-labelledby="advanced-title" aria-modal="true" role="dialog" hidden>
+        <div class="advanced-panel">
+          <h2 id="advanced-title">Advanced Mode</h2>
+          <div class="advanced-actions" aria-label="Advanced controls">
+            <button id="connect" type="button">Connect MIDI</button>
+            <button id="learn" type="button">Learn Pads</button>
+            <button id="advanced-return" type="button">Return to Main Page</button>
+          </div>
         <div class="midi-panel">
           <label for="midi-input">MIDI input</label>
           <select id="midi-input"></select>
           <span id="midi-state">Web MIDI not connected</span>
+        </div>
         </div>
       </section>
 
@@ -75,6 +83,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=5"></script>
   </body>
 </html>

@@ -64,7 +64,8 @@ p {
 }
 
 .midi-panel,
-.controls button {
+.controls button,
+.advanced-actions button {
   background: rgba(26, 29, 34, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
@@ -255,11 +256,12 @@ p {
 
 .controls {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
 }
 
-.controls button {
+.controls button,
+.advanced-actions button {
   min-height: 48px;
   color: var(--text);
   border-radius: 8px;
@@ -267,14 +269,59 @@ p {
 }
 
 .controls button:hover,
-.controls button:focus-visible {
+.controls button:focus-visible,
+.advanced-actions button:hover,
+.advanced-actions button:focus-visible {
   background: var(--panel-2);
   outline: 2px solid rgba(255, 255, 255, 0.24);
 }
 
-.controls button:disabled {
+.controls button:disabled,
+.advanced-actions button:disabled {
   cursor: not-allowed;
   opacity: 0.48;
+}
+
+.advanced-page {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(232, 210, 141, 0.12), transparent 26rem),
+    rgba(8, 9, 11, 0.82);
+  backdrop-filter: blur(8px);
+}
+
+.advanced-page[hidden] {
+  display: none;
+}
+
+.advanced-panel {
+  width: min(620px, 100%);
+  padding: clamp(22px, 5vw, 38px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: #181b21;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.52);
+}
+
+.advanced-panel h2 {
+  margin: 0 0 18px;
+  font-size: clamp(2rem, 7vw, 4rem);
+  line-height: 0.95;
+}
+
+.advanced-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.advanced-actions #advanced-return {
+  grid-column: 1 / -1;
 }
 
 .result-overlay {
@@ -408,10 +455,11 @@ select {
   }
 
   .controls {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 
-  .midi-panel {
+  .midi-panel,
+  .advanced-actions {
     grid-template-columns: 1fr;
   }
 
