@@ -13,6 +13,7 @@ const advancedHotspot = document.querySelector("#advanced-hotspot");
 const resetButton = document.querySelector("#reset");
 const boardEl = document.querySelector(".board");
 const inputSelect = document.querySelector("#midi-input");
+const sequenceGoalSelect = document.querySelector("#sequence-goal");
 const midiStateEl = document.querySelector("#midi-state");
 const resultOverlay = document.querySelector("#result-overlay");
 const resultTitleEl = document.querySelector("#result-title");
@@ -58,6 +59,7 @@ const storageKeys = {
   inputId: "bop-pad-simon-input-id",
   inputName: "bop-pad-simon-input-name",
   notes: "bop-pad-simon-notes",
+  sequenceGoal: "sigil-sequence-goal",
 };
 
 const defaultPadNotes = [null, null, null, null];
@@ -81,12 +83,14 @@ const state = {
   best: Number(localStorage.getItem(storageKeys.best) || 0),
   padNotes: loadedPadNotes.notes,
   hasSavedMapping: loadedPadNotes.saved,
+  sequenceGoal: loadSequenceGoal(),
 };
 
 if (bestEl) {
   bestEl.textContent = state.best;
 }
 renderMappings();
+renderSequenceGoal();
 setStartupMessage();
 syncLearningDisplay();
 autoConnectMidi();
@@ -99,6 +103,7 @@ if (resetButton) {
   resetButton.addEventListener("click", resetGame);
 }
 inputSelect.addEventListener("change", selectMidiInput);
+sequenceGoalSelect.addEventListener("change", updateSequenceGoal);
 resultStartButton.addEventListener("click", startGame);
 resultCloseButton.addEventListener("click", hideResult);
 resultAchievementsButton.addEventListener("click", showAchievementsPage);
@@ -459,18 +464,23 @@ function handlePad(padIndex, velocity = 96) {
   state.playerIndex += 1;
   if (state.playerIndex === state.sequence.length) {
     state.acceptingInput = false;
+    if (isSequenceGoalReached()) {
+      completeRitual();
+      return;
+    }
+
     setMessage("Nice");
     state.nextRoundTimer = setTimeout(addRound, 680);
   }
 }
 
-function endGame() {
+function endGame(achieved = false) {
   state.acceptingInput = false;
   state.gameActive = false;
   updateStartButton();
   const score = Math.max(0, state.sequence.length - 1);
   const elapsedMs = state.startedAt ? Date.now() - state.startedAt : 0;
-  saveAchievement(state.correctSteps, elapsedMs);
+  saveAchievement(state.correctSteps, elapsedMs, achieved);
   const isNewBest = score > state.best;
   if (isNewBest) {
     state.best = score;
@@ -478,12 +488,17 @@ function endGame() {
     if (bestEl) {
       bestEl.textContent = score;
     }
-    setMessage("New best", "Press Start to play again.");
+    setMessage("");
   } else {
-    setMessage("Missed", "Press Start to try again.");
+    setMessage("");
   }
 
-  showResult(state.correctSteps, elapsedMs, isNewBest);
+  showResult(state.correctSteps, elapsedMs, achieved);
+}
+
+function completeRitual() {
+  cancelPendingRound();
+  endGame(true);
 }
 
 function updateRound() {
@@ -498,11 +513,13 @@ function renderMappings() {
   });
 }
 
-function showResult(steps, elapsedMs, isNewBest) {
-  resultTitleEl.textContent = isNewBest ? "New Best" : "Missed";
+function showResult(steps, elapsedMs, achieved) {
+  resultTitleEl.textContent = achieved ? "Ritual Achieved" : "Ritual Incomplete, Try Again";
   resultStepsEl.textContent = steps;
   resultTimeEl.textContent = formatElapsed(elapsedMs);
-  resultDetailEl.textContent = "Press Start Again to play a new run.";
+  resultDetailEl.textContent = achieved
+    ? "The sigil sequence reached its chosen goal."
+    : "Press Start Again to attempt the ritual again.";
   resultOverlay.hidden = false;
 }
 
@@ -530,11 +547,13 @@ function hideAdvancedPage() {
   enterKioskMode();
 }
 
-function saveAchievement(steps, elapsedMs) {
+function saveAchievement(steps, elapsedMs, achieved) {
   const achievements = loadAchievements();
   achievements.push({
+    achieved,
     elapsedMs,
     finishedAt: new Date().toISOString(),
+    goal: state.sequenceGoal,
     steps,
   });
 
@@ -542,6 +561,36 @@ function saveAchievement(steps, elapsedMs) {
     storageKeys.achievements,
     JSON.stringify(sortAchievements(achievements).slice(0, 5)),
   );
+}
+
+function isSequenceGoalReached() {
+  return state.sequenceGoal !== "unlimited" && state.sequence.length >= state.sequenceGoal;
+}
+
+function updateSequenceGoal() {
+  state.sequenceGoal = normalizeSequenceGoal(sequenceGoalSelect.value);
+  localStorage.setItem(storageKeys.sequenceGoal, String(state.sequenceGoal));
+}
+
+function renderSequenceGoal() {
+  sequenceGoalSelect.value = String(state.sequenceGoal);
+}
+
+function loadSequenceGoal() {
+  return normalizeSequenceGoal(localStorage.getItem(storageKeys.sequenceGoal) || "unlimited");
+}
+
+function normalizeSequenceGoal(value) {
+  if (value === "unlimited") {
+    return "unlimited";
+  }
+
+  const numericValue = Number(value);
+  if (Number.isInteger(numericValue) && numericValue >= 5 && numericValue <= 20) {
+    return numericValue;
+  }
+
+  return "unlimited";
 }
 
 function renderAchievements() {

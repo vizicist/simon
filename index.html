@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sigil Sequence Ritual</title>
-    <link rel="stylesheet" href="styles.css?v=18">
+    <link rel="stylesheet" href="styles.css?v=19">
   </head>
   <body>
     <main class="app" aria-labelledby="title">
@@ -60,13 +60,35 @@
             <select id="midi-input"></select>
             <span id="midi-state">Web MIDI not connected</span>
           </div>
+          <div class="goal-panel">
+            <label for="sequence-goal">Sequence Goal</label>
+            <select id="sequence-goal">
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">11</option>
+              <option value="12">12</option>
+              <option value="13">13</option>
+              <option value="14">14</option>
+              <option value="15">15</option>
+              <option value="16">16</option>
+              <option value="17">17</option>
+              <option value="18">18</option>
+              <option value="19">19</option>
+              <option value="20">20</option>
+              <option value="unlimited">unlimited</option>
+            </select>
+          </div>
           <button class="advanced-return" id="advanced-return" type="button">Return to Main Page</button>
         </div>
       </section>
 
       <section class="result-overlay" id="result-overlay" aria-labelledby="result-title" aria-modal="true" role="dialog" hidden>
         <div class="result-dialog">
-          <p class="result-kicker">Run complete</p>
+          <p class="result-kicker">Ritual Complete</p>
           <h2 id="result-title">Missed</h2>
           <div class="result-stats" aria-label="Game result">
             <span>
@@ -100,6 +122,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=18"></script>
+    <script src="app.js?v=19"></script>
   </body>
 </html>
