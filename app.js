@@ -505,12 +505,13 @@ function renderMappings() {
 
 function showResult(steps, elapsedMs, achieved) {
   stopSigilMessage();
-  resultTitleEl.textContent = achieved ? "Ritual Achieved" : "Ritual Incomplete, Try Again";
+  resultTitleEl.textContent = achieved ? "Ritual Achieved" : "Ritual Incomplete";
   resultStepsEl.textContent = steps;
   resultTimeEl.textContent = formatElapsed(elapsedMs);
   resultDetailEl.textContent = achieved
     ? "The sigil sequence reached its chosen goal."
-    : "Press Start Again to attempt the ritual again.";
+    : "";
+  resultStartButton.textContent = achieved ? "Start Again" : "Try Again";
   sigilMessagePanel.hidden = !achieved;
   resultOverlay.hidden = false;
 }
