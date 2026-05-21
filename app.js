@@ -887,10 +887,10 @@ function playMechanicalSound(index, velocity = 96) {
   }
 
   const voices = [
-    { notes: [523.25, 659.25, 783.99], pan: -0.42 },
-    { notes: [659.25, 830.61, 987.77], pan: 0.42 },
-    { notes: [587.33, 739.99, 880], pan: -0.18 },
-    { notes: [783.99, 987.77, 1174.66], pan: 0.18 },
+    { notes: [261.63, 329.63, 392], pan: -0.42 },
+    { notes: [329.63, 415.3, 493.88], pan: 0.42 },
+    { notes: [293.66, 370, 440], pan: -0.18 },
+    { notes: [392, 493.88, 587.33], pan: 0.18 },
   ];
   const voice = voices[index];
   const now = context.currentTime;
