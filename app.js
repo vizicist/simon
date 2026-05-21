@@ -369,7 +369,7 @@ async function startGame(mode = "ritual") {
   state.playingBack = false;
   state.recordHallOfFame = isChallenge;
   state.lastStartMode = mode;
-  state.activeSequenceGoal = isChallenge ? state.sequenceGoal : ritualGoalSteps;
+  state.activeSequenceGoal = isChallenge ? "unlimited" : ritualGoalSteps;
   state.startedAt = Date.now();
   state.correctSteps = 0;
   updateStartButton();
@@ -499,8 +499,9 @@ function endGame(achieved = false) {
   updateStartButton();
   const score = getAchievedSequenceLength(achieved);
   const elapsedMs = state.startedAt ? Date.now() - state.startedAt : 0;
+  let hallOfFameResult = null;
   if (state.recordHallOfFame) {
-    saveAchievement(score, elapsedMs, achieved);
+    hallOfFameResult = saveAchievement(score, elapsedMs, achieved);
   }
   const isNewBest = score > state.best;
   if (isNewBest) {
@@ -511,7 +512,7 @@ function endGame(achieved = false) {
     }
   }
 
-  showResult(score, elapsedMs, achieved);
+  showResult(score, elapsedMs, achieved, hallOfFameResult);
 }
 
 function getAchievedSequenceLength(achieved) {
@@ -543,21 +544,34 @@ function renderMappings() {
   });
 }
 
-function showResult(steps, elapsedMs, achieved) {
+function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   stopSigilMessage();
   state.lastRunAchieved = achieved;
-  resultTitleEl.textContent = achieved ? "Ritual Achieved" : "Ritual Incomplete";
+  resultTitleEl.textContent = hallOfFameResult
+    ? "Challenge Complete"
+    : achieved ? "Ritual Achieved" : "Ritual Incomplete";
   resultStepsEl.textContent = steps;
   resultTimeEl.textContent = formatElapsed(elapsedMs);
-  resultDetailEl.textContent = achieved
-    ? "The sigil sequence reached its chosen goal."
-    : "";
+  resultDetailEl.textContent = getResultDetail(achieved, hallOfFameResult);
   resultStartButton.textContent = achieved ? "Start Again" : "Return";
-  resultActionsEl.classList.toggle("is-single", !achieved);
-  resultAchievementsButton.hidden = !achieved;
-  resultCloseButton.hidden = !achieved;
+  resultActionsEl.classList.toggle("is-single", !achieved && !hallOfFameResult);
+  resultActionsEl.classList.toggle("is-pair", Boolean(hallOfFameResult));
+  resultAchievementsButton.hidden = !achieved && !hallOfFameResult;
+  resultCloseButton.hidden = !achieved || Boolean(hallOfFameResult);
   sigilMessagePanel.hidden = !achieved;
   resultOverlay.hidden = false;
+}
+
+function getResultDetail(achieved, hallOfFameResult) {
+  if (hallOfFameResult?.qualified) {
+    return `Good enough for the Hall of Fame: #${hallOfFameResult.rank}.`;
+  }
+
+  if (hallOfFameResult) {
+    return "Not enough for the Hall of Fame.";
+  }
+
+  return achieved ? "The sigil sequence reached its chosen goal." : "";
 }
 
 function hideResult() {
@@ -629,18 +643,28 @@ function hideAdvancedPage() {
 
 function saveAchievement(steps, elapsedMs, achieved) {
   const achievements = loadAchievements();
-  achievements.push({
+  const record = {
     achieved,
     elapsedMs,
     finishedAt: new Date().toISOString(),
     goal: state.activeSequenceGoal,
     steps,
-  });
+  };
+  achievements.push(record);
+
+  const sorted = sortAchievements(achievements);
+  const saved = sorted.slice(0, 10);
+  const rankIndex = saved.indexOf(record);
 
   localStorage.setItem(
     storageKeys.achievements,
-    JSON.stringify(sortAchievements(achievements).slice(0, 10)),
+    JSON.stringify(saved),
   );
+
+  return {
+    qualified: rankIndex !== -1,
+    rank: rankIndex === -1 ? null : rankIndex + 1,
+  };
 }
 
 function isSequenceGoalReached() {

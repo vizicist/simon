@@ -592,6 +592,10 @@ p {
   grid-template-columns: 1fr;
 }
 
+.result-actions.is-pair {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .achievements-panel .result-actions {
   grid-template-columns: 1fr;
   flex-shrink: 0;
