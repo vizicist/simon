@@ -78,7 +78,8 @@ p {
 
 .midi-panel,
 .controls button,
-.advanced-actions button {
+.advanced-actions button,
+.advanced-return {
   background: rgba(26, 29, 34, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
@@ -295,7 +296,8 @@ p {
 }
 
 .controls button,
-.advanced-actions button {
+.advanced-actions button,
+.advanced-return {
   min-height: 48px;
   color: var(--text);
   border-radius: 8px;
@@ -305,13 +307,16 @@ p {
 .controls button:hover,
 .controls button:focus-visible,
 .advanced-actions button:hover,
-.advanced-actions button:focus-visible {
+.advanced-actions button:focus-visible,
+.advanced-return:hover,
+.advanced-return:focus-visible {
   background: var(--panel-2);
   outline: 2px solid rgba(255, 255, 255, 0.24);
 }
 
 .controls button:disabled,
-.advanced-actions button:disabled {
+.advanced-actions button:disabled,
+.advanced-return:disabled {
   cursor: not-allowed;
   opacity: 0.48;
 }
@@ -354,9 +359,13 @@ p {
   gap: 10px;
 }
 
-.advanced-actions #advanced-return,
 .advanced-actions #advanced-achievements {
   grid-column: 1 / -1;
+}
+
+.advanced-return {
+  width: 100%;
+  margin-top: 18px;
 }
 
 .result-overlay,
