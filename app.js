@@ -761,12 +761,24 @@ function createCountdownOverlay() {
   message.className = "countdown-message";
   message.textContent = "Match the Sigil Sequence";
 
+  const goal = document.createElement("span");
+  goal.className = "countdown-goal";
+  goal.textContent = getCountdownGoalText();
+
   const beat = document.createElement("strong");
   beat.className = "countdown-beat";
 
-  overlay.append(message, beat);
+  overlay.append(message, goal, beat);
   document.body.append(overlay);
   return overlay;
+}
+
+function getCountdownGoalText() {
+  if (state.sequenceGoal === "unlimited") {
+    return "Complete as Many Steps as You Can";
+  }
+
+  return `Finish ${state.sequenceGoal} Steps to Complete the Ritual`;
 }
 
 function loadPadNotes() {
