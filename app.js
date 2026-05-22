@@ -15,6 +15,8 @@ const sequenceGoalSelect = document.querySelector("#sequence-goal");
 const sequenceTimingInput = document.querySelector("#sequence-timing");
 const sequenceTimingValue = document.querySelector("#sequence-timing-value");
 const startCountdownSelect = document.querySelector("#start-countdown");
+const messageVolumeInput = document.querySelector("#message-volume");
+const messageVolumeValue = document.querySelector("#message-volume-value");
 const midiStateEl = document.querySelector("#midi-state");
 const resultOverlay = document.querySelector("#result-overlay");
 const resultTitleEl = document.querySelector("#result-title");
@@ -79,6 +81,7 @@ const storageKeys = {
   sequenceGoal: "sigil-sequence-goal",
   sequenceTiming: "sigil-sequence-timing",
   startCountdown: "sigil-sequence-start-countdown",
+  messageVolume: "sigil-sequence-message-volume",
 };
 
 localStorage.removeItem("sigil-sequence-achievements");
@@ -110,6 +113,7 @@ const state = {
   activeSequenceGoal: ritualGoalSteps,
   sequenceTiming: loadSequenceTiming(),
   startCountdown: loadStartCountdown(),
+  messageVolume: loadMessageVolume(),
   recordHallOfFame: false,
   lastStartMode: "ritual",
   lastRunAchieved: false,
@@ -123,6 +127,7 @@ renderMappings();
 renderSequenceGoal();
 renderSequenceTiming();
 renderStartCountdown();
+renderMessageVolume();
 syncLearningDisplay();
 autoConnectMidi();
 requestMainKioskOnStartup();
@@ -139,6 +144,7 @@ inputSelect.addEventListener("change", selectMidiInput);
 sequenceGoalSelect.addEventListener("change", updateSequenceGoal);
 sequenceTimingInput.addEventListener("input", updateSequenceTiming);
 startCountdownSelect.addEventListener("change", updateStartCountdownSetting);
+messageVolumeInput.addEventListener("input", updateMessageVolume);
 resultStartButton.addEventListener("click", handleResultStart);
 resultCloseButton.addEventListener("click", hideResult);
 resultAchievementsButton.addEventListener("click", showAchievementsPage);
@@ -642,6 +648,7 @@ function playSigilMessage(sigil) {
   stopSigilMessage();
   const src = sources[Math.floor(Math.random() * sources.length)];
   const audio = new Audio(src);
+  audio.volume = state.messageVolume;
   state.activeSigilMessage = audio;
   audio.addEventListener("ended", () => {
     if (state.activeSigilMessage === audio) {
@@ -745,6 +752,21 @@ function renderStartCountdown() {
   startCountdownSelect.value = String(state.startCountdown);
 }
 
+function updateMessageVolume() {
+  state.messageVolume = normalizeMessageVolume(messageVolumeInput.value);
+  localStorage.setItem(storageKeys.messageVolume, String(state.messageVolume));
+  renderMessageVolume();
+
+  if (state.activeSigilMessage) {
+    state.activeSigilMessage.volume = state.messageVolume;
+  }
+}
+
+function renderMessageVolume() {
+  messageVolumeInput.value = String(state.messageVolume);
+  messageVolumeValue.textContent = `${Math.round(state.messageVolume * 100)}%`;
+}
+
 function loadSequenceGoal() {
   return normalizeSequenceGoal(localStorage.getItem(storageKeys.sequenceGoal) || "unlimited");
 }
@@ -755,6 +777,10 @@ function loadSequenceTiming() {
 
 function loadStartCountdown() {
   return normalizeStartCountdown(localStorage.getItem(storageKeys.startCountdown) || "3");
+}
+
+function loadMessageVolume() {
+  return normalizeMessageVolume(localStorage.getItem(storageKeys.messageVolume) || "1");
 }
 
 function normalizeSequenceGoal(value) {
@@ -786,6 +812,15 @@ function normalizeStartCountdown(value) {
   }
 
   return 3;
+}
+
+function normalizeMessageVolume(value) {
+  const numericValue = Number(value);
+  if (Number.isFinite(numericValue)) {
+    return Math.min(1, Math.max(0, Math.round(numericValue * 100) / 100));
+  }
+
+  return 1;
 }
 
 function getSequenceStepDurationMs() {

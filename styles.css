@@ -118,6 +118,7 @@ p {
 .goal-panel,
 .timing-panel,
 .countdown-panel,
+.message-volume-panel,
 .controls button,
 .advanced-actions button,
 .advanced-return {
@@ -735,7 +736,8 @@ p {
   color: var(--muted);
 }
 
-.timing-panel {
+.timing-panel,
+.message-volume-panel {
   display: grid;
   grid-template-columns: auto minmax(180px, 1fr) auto;
   gap: 12px;
@@ -814,6 +816,7 @@ select {
   .goal-panel,
   .timing-panel,
   .countdown-panel,
+  .message-volume-panel,
   .advanced-actions {
     grid-template-columns: 1fr;
   }
