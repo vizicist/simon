@@ -375,7 +375,7 @@ async function startGame(mode = "ritual") {
   state.correctSteps = 0;
   updateStartButton();
   const runId = state.runId;
-  await runStartCountdown(runId);
+  await runStartCountdown(runId, mode);
   if (runId !== state.runId) {
     return;
   }
@@ -445,8 +445,8 @@ async function playSequence(runId) {
   startResponseTimeout(runId);
 }
 
-async function runStartCountdown(runId) {
-  const countdownOverlay = createCountdownOverlay();
+async function runStartCountdown(runId, mode) {
+  const countdownOverlay = createCountdownOverlay(mode);
   await wait(3000);
   if (runId !== state.runId) {
     countdownOverlay.remove();
@@ -946,7 +946,7 @@ function formatStepCount(steps) {
   return `${steps} ${steps === 1 ? "step" : "steps"}`;
 }
 
-function createCountdownOverlay() {
+function createCountdownOverlay(mode) {
   const overlay = document.createElement("div");
   overlay.className = "countdown-overlay";
   const boardRect = boardEl.getBoundingClientRect();
@@ -954,7 +954,16 @@ function createCountdownOverlay() {
 
   const message = document.createElement("span");
   message.className = "countdown-message";
-  message.textContent = "Match the Sequence";
+  const title = document.createElement("span");
+  title.textContent = "Match the Sequence";
+  message.append(title);
+
+  if (mode === "ritual") {
+    const detail = document.createElement("span");
+    detail.className = "countdown-detail";
+    detail.textContent = `${ritualGoalSteps} Steps will Complete the Ritual`;
+    message.append(detail);
+  }
 
   overlay.append(message);
   document.body.append(overlay);

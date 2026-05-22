@@ -321,12 +321,20 @@ p {
   left: 50%;
   top: var(--cue-center-y, 50%);
   width: min(1100px, calc(100vw - 48px));
+  display: grid;
+  gap: 0.18em;
   color: var(--text);
   font-size: clamp(2.2rem, 8vw, 7rem);
   font-weight: 700;
   line-height: 0.95;
   text-wrap: balance;
   transform: translate(-50%, -50%);
+}
+
+.countdown-detail {
+  font-size: clamp(1.1rem, 3vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.05;
 }
 
 .countdown-beat {
