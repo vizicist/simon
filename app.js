@@ -30,6 +30,7 @@ const resultCloseButton = document.querySelector("#result-close");
 const resultAchievementsButton = document.querySelector("#result-achievements");
 const sigilMessagePanel = document.querySelector("#sigil-message-panel");
 const sigilMessageButtons = Array.from(document.querySelectorAll(".sigil-message-button"));
+const sigilRefreshButton = document.querySelector("#sigil-refresh");
 const advancedPage = document.querySelector("#advanced-page");
 const advancedReturnButton = document.querySelector("#advanced-return");
 const achievementsPage = document.querySelector("#achievements-page");
@@ -121,6 +122,7 @@ const state = {
   lastStartMode: "ritual",
   lastRunAchieved: false,
   activeSigilMessage: null,
+  selectedSigilMessages: {},
 };
 
 if (bestEl) {
@@ -155,6 +157,7 @@ resultAchievementsButton.addEventListener("click", showAchievementsPage);
 sigilMessageButtons.forEach((button) => {
   button.addEventListener("click", handleSigilMessageClick);
 });
+sigilRefreshButton.addEventListener("click", handleSigilRefresh);
 advancedReturnButton.addEventListener("click", hideAdvancedPage);
 achievementsCloseButton.addEventListener("click", hideAchievementsPage);
 advancedHotspot.addEventListener("click", handleAdvancedHotspot);
@@ -635,7 +638,30 @@ function handleSigilMessageClick(event) {
 }
 
 function refreshSigilMessagesForCompletion() {
-  loadAvailableSigilMessages().finally(armSigilMessages);
+  loadAvailableSigilMessages().finally(() => {
+    selectRandomSigilMessages();
+    armSigilMessages();
+  });
+}
+
+async function handleSigilRefresh(event) {
+  if (!event.isTrusted) {
+    return;
+  }
+
+  stopSigilMessage();
+  disarmSigilMessages();
+  sigilRefreshButton.disabled = true;
+  sigilRefreshButton.textContent = "Looking...";
+
+  try {
+    await loadAvailableSigilMessages();
+    selectRandomSigilMessages();
+  } finally {
+    sigilRefreshButton.disabled = false;
+    sigilRefreshButton.textContent = "Look for New Messages";
+    armSigilMessages();
+  }
 }
 
 async function loadAvailableSigilMessages() {
@@ -679,6 +705,22 @@ function groupSigilMessages(fileNames) {
 
 function createEmptySigilMessages() {
   return Object.fromEntries(Object.keys(sigilMessages).map((sigil) => [sigil, []]));
+}
+
+function selectRandomSigilMessages() {
+  state.selectedSigilMessages = Object.fromEntries(
+    Object.entries(sigilMessages).map(([sigil, sources]) => {
+      return [sigil, chooseRandom(sources)];
+    }),
+  );
+}
+
+function chooseRandom(items) {
+  if (!items?.length) {
+    return null;
+  }
+
+  return items[Math.floor(Math.random() * items.length)];
 }
 
 function showFireworks() {
@@ -725,12 +767,12 @@ function handleResultStart() {
 
 function playSigilMessage(sigil) {
   const sources = sigilMessages[sigil];
-  if (!sources) {
+  if (!sources?.length) {
     return;
   }
 
   stopSigilMessage();
-  const src = sources[Math.floor(Math.random() * sources.length)];
+  const src = state.selectedSigilMessages[sigil] || chooseRandom(sources);
   const audio = new Audio(src);
   audio.volume = state.messageVolume;
   state.activeSigilMessage = audio;
@@ -759,16 +801,17 @@ function stopSigilMessage() {
 function showAchievementsPage() {
   renderAchievements();
   achievementsPage.hidden = false;
-  exitKioskMode();
+  enterKioskMode();
 }
 
 function hideAchievementsPage() {
   achievementsPage.hidden = true;
+  enterKioskMode();
 }
 
 function showAdvancedPage() {
   advancedPage.hidden = false;
-  exitKioskMode();
+  enterKioskMode();
 }
 
 function hideAdvancedPage() {
@@ -1001,22 +1044,6 @@ async function enterKioskMode() {
     await requestFullscreen.call(document.documentElement);
   } catch {
     // Fullscreen is browser-gated and may require a direct user gesture.
-  }
-}
-
-async function exitKioskMode() {
-  const exitFullscreen = document.exitFullscreen
-    || document.webkitExitFullscreen
-    || document.msExitFullscreen;
-
-  if (!getFullscreenElement() || !exitFullscreen) {
-    return;
-  }
-
-  try {
-    await exitFullscreen.call(document);
-  } catch {
-    // Ignore transient fullscreen state changes.
   }
 }
 
