@@ -573,7 +573,7 @@ function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   sigilMessagePanel.hidden = !achieved;
   resultOverlay.hidden = false;
   if (achieved) {
-    armSigilMessages();
+    refreshSigilMessagesForCompletion();
   }
   if (achieved || hallOfFameResult?.qualified) {
     showFireworks();
@@ -632,6 +632,10 @@ function handleSigilMessageClick(event) {
   }
 
   playSigilMessage(event.currentTarget.dataset.sigil);
+}
+
+function refreshSigilMessagesForCompletion() {
+  loadAvailableSigilMessages().finally(armSigilMessages);
 }
 
 async function loadAvailableSigilMessages() {
