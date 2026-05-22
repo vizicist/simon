@@ -38,7 +38,7 @@ const achievementEmpty = document.querySelector("#achievement-empty");
 const achievementsCloseButton = document.querySelector("#achievements-close");
 
 const colors = ["green", "red", "yellow", "blue"];
-const sigilMessages = {
+const fallbackSigilMessages = {
   chaos: ["mp3s/chaos-2026-05-09-21.18.04-319920.mp3"],
   oracle: ["mp3s/oracle-2026-05-09-21.18.45-427404.mp3"],
   directive: [
@@ -52,6 +52,7 @@ const sigilMessages = {
     "mp3s/sacred-2026-05-09-21.22.35-674882.mp3",
   ],
 };
+const sigilMessages = { ...fallbackSigilMessages };
 const keyMap = new Map([
   ["q", 0],
   ["w", 1],
@@ -131,6 +132,7 @@ renderSequenceTiming();
 renderStartCountdown();
 renderMessageVolume();
 syncLearningDisplay();
+loadAvailableSigilMessages();
 autoConnectMidi();
 requestMainKioskOnStartup();
 
@@ -630,6 +632,49 @@ function handleSigilMessageClick(event) {
   }
 
   playSigilMessage(event.currentTarget.dataset.sigil);
+}
+
+async function loadAvailableSigilMessages() {
+  try {
+    const response = await fetch("mp3s/", { cache: "no-store" });
+    if (!response.ok) {
+      return;
+    }
+
+    const html = await response.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const files = Array.from(doc.querySelectorAll("a"))
+      .map((link) => decodeURIComponent(link.getAttribute("href") || ""))
+      .map((href) => href.split("?")[0].split("#")[0].split("/").pop())
+      .filter((fileName) => fileName && fileName.toLowerCase().endsWith(".mp3"));
+    const discoveredMessages = groupSigilMessages(files);
+
+    Object.keys(sigilMessages).forEach((sigil) => {
+      if (discoveredMessages[sigil]?.length) {
+        sigilMessages[sigil] = discoveredMessages[sigil];
+      }
+    });
+  } catch {
+    Object.assign(sigilMessages, fallbackSigilMessages);
+  }
+}
+
+function groupSigilMessages(fileNames) {
+  return fileNames.reduce((messages, fileName) => {
+    const sigil = Object.keys(sigilMessages).find((name) => {
+      return fileName.toLowerCase().startsWith(`${name}-`);
+    });
+
+    if (sigil) {
+      messages[sigil].push(`mp3s/${encodeURIComponent(fileName)}`);
+    }
+
+    return messages;
+  }, createEmptySigilMessages());
+}
+
+function createEmptySigilMessages() {
+  return Object.fromEntries(Object.keys(sigilMessages).map((sigil) => [sigil, []]));
 }
 
 function showFireworks() {
