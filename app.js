@@ -1047,22 +1047,6 @@ async function enterKioskMode() {
   }
 }
 
-async function exitKioskMode() {
-  const exitFullscreen = document.exitFullscreen
-    || document.webkitExitFullscreen
-    || document.msExitFullscreen;
-
-  if (!getFullscreenElement() || !exitFullscreen) {
-    return;
-  }
-
-  try {
-    await exitFullscreen.call(document);
-  } catch {
-    // Ignore transient fullscreen state changes.
-  }
-}
-
 function getFullscreenElement() {
   return document.fullscreenElement
     || document.webkitFullscreenElement
