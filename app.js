@@ -104,6 +104,8 @@ const state = {
   runId: 0,
   nextRoundTimer: null,
   responseTimeoutTimer: null,
+  sigilMessageArmTimer: null,
+  sigilMessageArmed: false,
   startedAt: null,
   correctSteps: 0,
   best: Number(localStorage.getItem(storageKeys.best) || 0),
@@ -149,7 +151,7 @@ resultStartButton.addEventListener("click", handleResultStart);
 resultCloseButton.addEventListener("click", hideResult);
 resultAchievementsButton.addEventListener("click", showAchievementsPage);
 sigilMessageButtons.forEach((button) => {
-  button.addEventListener("click", () => playSigilMessage(button.dataset.sigil));
+  button.addEventListener("click", handleSigilMessageClick);
 });
 advancedReturnButton.addEventListener("click", hideAdvancedPage);
 achievementsCloseButton.addEventListener("click", hideAchievementsPage);
@@ -553,6 +555,7 @@ function renderMappings() {
 
 function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   stopSigilMessage();
+  disarmSigilMessages();
   clearFireworks();
   state.lastRunAchieved = achieved;
   const isChallengeResult = Boolean(hallOfFameResult);
@@ -567,6 +570,9 @@ function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   resultCloseButton.hidden = true;
   sigilMessagePanel.hidden = !achieved;
   resultOverlay.hidden = false;
+  if (achieved) {
+    armSigilMessages();
+  }
   if (achieved || hallOfFameResult?.qualified) {
     showFireworks();
   }
@@ -598,8 +604,32 @@ function getResultDetail(achieved, hallOfFameResult) {
 
 function hideResult() {
   stopSigilMessage();
+  disarmSigilMessages();
   clearFireworks();
   resultOverlay.hidden = true;
+}
+
+function armSigilMessages() {
+  state.sigilMessageArmTimer = setTimeout(() => {
+    state.sigilMessageArmed = true;
+    state.sigilMessageArmTimer = null;
+  }, 500);
+}
+
+function disarmSigilMessages() {
+  state.sigilMessageArmed = false;
+  if (state.sigilMessageArmTimer) {
+    clearTimeout(state.sigilMessageArmTimer);
+    state.sigilMessageArmTimer = null;
+  }
+}
+
+function handleSigilMessageClick(event) {
+  if (!state.sigilMessageArmed || !event.isTrusted) {
+    return;
+  }
+
+  playSigilMessage(event.currentTarget.dataset.sigil);
 }
 
 function showFireworks() {
