@@ -594,7 +594,7 @@ function getResultTitle(achieved, hallOfFameResult) {
 
 function getResultDetail(achieved, hallOfFameResult) {
   if (hallOfFameResult?.qualified) {
-    return "Excellent sequence. Your name enters the record.";
+    return "";
   }
 
   if (hallOfFameResult) {

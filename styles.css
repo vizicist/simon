@@ -589,6 +589,10 @@ p {
   line-height: 0.95;
 }
 
+#result-detail {
+  min-height: 1.25em;
+}
+
 .sigil-message-panel {
   margin-top: 22px;
 }
