@@ -5,13 +5,37 @@
   --panel-2: #242932;
   --text: #f7f4ea;
   --muted: #aeb5c2;
-  --green: #b8d2a2;
-  --red: #dfb49a;
-  --yellow: #e8d28d;
-  --blue: #aec9dc;
+  --green: #93a86e;
+  --red: #d91828;
+  --yellow: #f2ae30;
+  --blue: #0288a6;
   --ring: #ffffff;
   --pad-surface: #efe8d3;
   --pad-line: #18171c;
+}
+
+@font-face {
+  font-family: "Burra Regular";
+  src: url("assets/fonts/Burra-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Mono";
+  src: url("assets/fonts/SpaceMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Mono";
+  src: url("assets/fonts/SpaceMono-Bold.ttf") format("truetype");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
 }
 
 * {
@@ -30,7 +54,7 @@ body {
     radial-gradient(circle at 18% 14%, rgba(32, 104, 112, 0.28), transparent 24rem),
     linear-gradient(135deg, #102c2f 0%, #153f43 42%, #0f1416 100%);
   color: var(--text);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Space Mono", ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
 button,
@@ -50,8 +74,9 @@ select {
   height: 100%;
   width: min(1180px, 100%);
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto;
   align-items: center;
+  align-content: center;
 }
 
 .advanced-hotspot {
@@ -77,8 +102,11 @@ select {
 
 h1 {
   margin: 0 0 6px;
+  font-family: "Burra Regular", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
   font-size: clamp(1.8rem, 5.5vw, 4.2rem);
   line-height: 0.95;
+  word-spacing: 0.22em;
 }
 
 p {
@@ -90,6 +118,7 @@ p {
 .goal-panel,
 .timing-panel,
 .countdown-panel,
+.message-volume-panel,
 .controls button,
 .advanced-actions button,
 .advanced-return {
@@ -202,30 +231,32 @@ p {
 }
 
 .pad-green {
-  --pad-color: #44d05b;
+  --pad-color: var(--green);
   --shape-x: 58%;
   --shape-y: 58%;
+  --shape-size: 78%;
   border-radius: 100% 0 0 0;
 }
 
 .pad-red {
-  --pad-color: #f1563f;
+  --pad-color: var(--red);
   --shape-x: 42%;
   --shape-y: 58%;
   border-radius: 0 100% 0 0;
 }
 
 .pad-yellow {
-  --pad-color: #f2c83d;
+  --pad-color: var(--yellow);
   --shape-x: 58%;
   --shape-y: 42%;
   border-radius: 0 0 0 100%;
 }
 
 .pad-blue {
-  --pad-color: #3f95f1;
+  --pad-color: var(--blue);
   --shape-x: 42%;
   --shape-y: 42%;
+  --shape-size: 82%;
   border-radius: 0 0 100% 0;
 }
 
@@ -239,8 +270,8 @@ p {
   z-index: 1;
   left: var(--shape-x, 50%);
   top: var(--shape-y, 50%);
-  width: min(68%, 260px);
-  height: min(68%, 260px);
+  width: min(var(--shape-size, 68%), 260px);
+  height: min(var(--shape-size, 68%), 260px);
   object-fit: contain;
   opacity: 0.68;
   translate: -50% -50%;
@@ -256,7 +287,7 @@ p {
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.92);
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 600;
   opacity: 0;
   pointer-events: none;
   transition: opacity 140ms ease;
@@ -268,7 +299,7 @@ p {
 
 .controls {
   width: min(1120px, 100%);
-  margin: clamp(8px, 2vh, 18px) auto 0;
+  margin: clamp(0px, 0.6vh, 8px) auto 0;
 }
 
 .midi-panel {
@@ -280,10 +311,6 @@ p {
   position: fixed;
   inset: 0;
   z-index: 11;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 18px;
   padding: 24px;
   background: rgba(8, 9, 11, 0.44);
   text-align: center;
@@ -291,11 +318,24 @@ p {
 }
 
 .countdown-message {
+  position: absolute;
+  left: 50%;
+  top: var(--cue-center-y, 50%);
+  width: min(1100px, calc(100vw - 48px));
+  display: grid;
+  gap: 0.18em;
   color: var(--text);
   font-size: clamp(2.2rem, 8vw, 7rem);
-  font-weight: 950;
+  font-weight: 700;
   line-height: 0.95;
   text-wrap: balance;
+  transform: translate(-50%, -50%);
+}
+
+.countdown-detail {
+  font-size: clamp(1.1rem, 3vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.05;
 }
 
 .countdown-beat {
@@ -306,9 +346,10 @@ p {
 
 .controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(320px, 440px));
+  grid-template-columns: repeat(2, minmax(0, 520px));
   justify-content: center;
-  gap: 10px;
+  column-gap: 10px;
+  row-gap: clamp(20px, 3.6vh, 38px);
 }
 
 .controls button,
@@ -320,7 +361,7 @@ p {
   border-radius: 8px;
   cursor: pointer;
   font-size: clamp(1.18rem, 2.1vw, 1.55rem);
-  font-weight: 850;
+  font-weight: 700;
   line-height: 1.08;
 }
 
@@ -332,6 +373,27 @@ p {
 
 #start {
   grid-column: 1 / -1;
+  justify-self: center;
+  width: min(1048px, 100%);
+  font-size: clamp(1.6rem, 3.35vw, 2.55rem);
+  min-height: 70px;
+}
+
+#hall-of-fame-challenge,
+#show-hall-of-fame {
+  width: min(390px, 100%);
+  min-height: 50px;
+  padding: 8px 14px;
+  font-size: clamp(1rem, 1.62vw, 1.28rem);
+  font-weight: 400;
+}
+
+#hall-of-fame-challenge {
+  justify-self: end;
+}
+
+#show-hall-of-fame {
+  justify-self: start;
 }
 
 .controls button:hover,
@@ -411,9 +473,51 @@ p {
   display: none;
 }
 
+.fireworks-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.firework {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  color: var(--spark);
+  background: currentColor;
+  opacity: 0;
+  animation: firework-burst 1900ms ease-out var(--delay) 4 both;
+  filter: drop-shadow(0 0 16px currentColor);
+  box-shadow:
+    0 -110px 0 -1px currentColor,
+    78px -78px 0 -1px currentColor,
+    110px 0 0 -1px currentColor,
+    78px 78px 0 -1px currentColor,
+    0 110px 0 -1px currentColor,
+    -78px 78px 0 -1px currentColor,
+    -110px 0 0 -1px currentColor,
+    -78px -78px 0 -1px currentColor,
+    0 -58px 0 0 currentColor,
+    42px -42px 0 0 currentColor,
+    58px 0 0 0 currentColor,
+    42px 42px 0 0 currentColor,
+    0 58px 0 0 currentColor,
+    -42px 42px 0 0 currentColor,
+    -58px 0 0 0 currentColor,
+    -42px -42px 0 0 currentColor,
+    0 0 36px 12px currentColor;
+}
+
 .result-dialog,
 .achievements-panel {
-  width: min(640px, 100%);
+  position: relative;
+  z-index: 1;
+  width: min(760px, 100%);
   padding: clamp(24px, 5vw, 44px);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
@@ -428,12 +532,13 @@ p {
   max-height: calc(100dvh - 48px);
   overflow: hidden;
   overscroll-behavior: contain;
+  padding-block: clamp(18px, 3vh, 28px);
 }
 
 .result-kicker {
   margin-bottom: 10px;
   color: var(--yellow);
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -444,6 +549,19 @@ p {
   line-height: 0.92;
   overflow-wrap: anywhere;
   text-wrap: balance;
+}
+
+.achievements-panel h2 {
+  font-size: clamp(1.7rem, 5.2vw, 3.4rem);
+  font-weight: 400;
+  line-height: 0.98;
+}
+
+#result-title {
+  font-size: clamp(1.35rem, 5vw, 3.6rem);
+  overflow-wrap: normal;
+  text-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .result-stats {
@@ -459,7 +577,7 @@ p {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -469,6 +587,10 @@ p {
   color: var(--text);
   font-size: clamp(2.8rem, 9vw, 5.4rem);
   line-height: 0.95;
+}
+
+#result-detail {
+  min-height: 1.25em;
 }
 
 .sigil-message-panel {
@@ -527,9 +649,14 @@ p {
   grid-template-columns: 1fr;
 }
 
+.result-actions.is-pair {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .achievements-panel .result-actions {
   grid-template-columns: 1fr;
   flex-shrink: 0;
+  margin-top: 14px;
 }
 
 .result-actions button {
@@ -541,7 +668,7 @@ p {
   color: var(--text);
   cursor: pointer;
   font-size: clamp(1.18rem, 2.1vw, 1.5rem);
-  font-weight: 850;
+  font-weight: 700;
   line-height: 1.08;
 }
 
@@ -552,20 +679,21 @@ p {
 
 .achievement-list {
   display: grid;
-  gap: 10px;
-  margin: 28px 0 0;
+  gap: 6px;
+  margin: 16px 0 0;
   padding: 0;
   list-style: none;
   min-height: 0;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .achievement-list li {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 14px;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
   align-items: center;
-  padding: 14px 16px;
+  min-height: 34px;
+  padding: 7px 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
@@ -573,20 +701,15 @@ p {
 
 .achievement-rank {
   color: var(--yellow);
-  font-weight: 900;
+  font-size: clamp(0.92rem, 1.9vw, 1.12rem);
+  font-weight: 400;
 }
 
-.achievement-time {
+.achievement-result {
   color: var(--text);
-  font-size: clamp(1.8rem, 5vw, 3rem);
-  font-weight: 900;
+  font-size: clamp(1.15rem, 3.2vw, 2rem);
+  font-weight: 700;
   line-height: 1;
-}
-
-.achievement-steps {
-  color: var(--muted);
-  font-weight: 800;
-  text-transform: uppercase;
 }
 
 .achievement-empty {
@@ -627,7 +750,8 @@ p {
   color: var(--muted);
 }
 
-.timing-panel {
+.timing-panel,
+.message-volume-panel {
   display: grid;
   grid-template-columns: auto minmax(180px, 1fr) auto;
   gap: 12px;
@@ -666,6 +790,25 @@ select {
   }
 }
 
+@keyframes firework-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.12);
+    filter: brightness(2.3) saturate(1.45);
+  }
+
+  16% {
+    opacity: 1;
+    filter: brightness(2.8) saturate(1.75);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(2.45);
+    filter: brightness(1.35) saturate(1.25);
+  }
+}
+
 @media (max-width: 700px) {
   .app {
     padding: 16px;
@@ -684,14 +827,11 @@ select {
     grid-template-columns: 1fr;
   }
 
-  #start {
-    font-size: clamp(0.95rem, 4vw, 1.2rem);
-  }
-
   .midi-panel,
   .goal-panel,
   .timing-panel,
   .countdown-panel,
+  .message-volume-panel,
   .advanced-actions {
     grid-template-columns: 1fr;
   }

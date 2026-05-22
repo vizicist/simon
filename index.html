@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sigil Sequence Ritual</title>
-    <link rel="stylesheet" href="styles.css?v=39">
+    <link rel="stylesheet" href="styles.css?v=76">
   </head>
   <body>
     <main class="app" aria-labelledby="title">
@@ -38,7 +38,7 @@
         </div>
 
         <div class="controls" aria-label="Game controls">
-          <button id="start" type="button">Start Ritual - Complete 8 Steps to Access Ritual Recordings</button>
+          <button id="start" type="button">Start Ritual to Access Recorded Messages</button>
           <button id="hall-of-fame-challenge" type="button">Start Hall of Fame Challenge</button>
           <button id="show-hall-of-fame" type="button">Show Hall of Fame</button>
         </div>
@@ -98,6 +98,11 @@
               <option value="6">6</option>
             </select>
           </div>
+          <div class="message-volume-panel">
+            <label for="message-volume">Message Volume</label>
+            <input id="message-volume" type="range" min="0" max="1" step="0.05" value="1">
+            <output id="message-volume-value" for="message-volume">100%</output>
+          </div>
           <button class="advanced-return" id="advanced-return" type="button">Return to Main Page</button>
         </div>
       </section>
@@ -135,7 +140,7 @@
           </div>
           <div class="result-actions">
             <button id="result-start" type="button">Start Again</button>
-            <button id="result-achievements" type="button">Sigil Sequence Hall of Fame</button>
+            <button id="result-achievements" type="button">Show Hall of Fame</button>
             <button id="result-close" type="button">Close</button>
           </div>
         </div>
@@ -153,6 +158,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=44"></script>
+    <script src="app.js?v=68"></script>
   </body>
 </html>
