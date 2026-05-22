@@ -811,7 +811,7 @@ function hideAchievementsPage() {
 
 function showAdvancedPage() {
   advancedPage.hidden = false;
-  exitKioskMode();
+  enterKioskMode();
 }
 
 function hideAdvancedPage() {
