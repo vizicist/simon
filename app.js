@@ -801,11 +801,12 @@ function stopSigilMessage() {
 function showAchievementsPage() {
   renderAchievements();
   achievementsPage.hidden = false;
-  exitKioskMode();
+  enterKioskMode();
 }
 
 function hideAchievementsPage() {
   achievementsPage.hidden = true;
+  enterKioskMode();
 }
 
 function showAdvancedPage() {
