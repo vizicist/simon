@@ -560,7 +560,7 @@ function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   resultCloseButton.hidden = !achieved || Boolean(hallOfFameResult);
   sigilMessagePanel.hidden = !achieved;
   resultOverlay.hidden = false;
-  if (hallOfFameResult?.qualified) {
+  if (achieved || hallOfFameResult?.qualified) {
     showFireworks();
   }
 }
@@ -574,7 +574,7 @@ function getResultTitle(achieved, hallOfFameResult) {
     return "Challenge Complete";
   }
 
-  return achieved ? "Ritual Achieved" : "Ritual Incomplete";
+  return achieved ? "Ritual Achieved!!" : "Ritual Incomplete";
 }
 
 function getResultDetail(achieved, hallOfFameResult) {
@@ -586,7 +586,7 @@ function getResultDetail(achieved, hallOfFameResult) {
     return "Not enough for the Hall of Fame.";
   }
 
-  return achieved ? "The sigil sequence reached its chosen goal." : "";
+  return "";
 }
 
 function hideResult() {
