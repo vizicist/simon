@@ -549,15 +549,16 @@ function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   stopSigilMessage();
   clearFireworks();
   state.lastRunAchieved = achieved;
+  const isChallengeResult = Boolean(hallOfFameResult);
   resultTitleEl.textContent = getResultTitle(achieved, hallOfFameResult);
   resultStepsEl.textContent = steps;
   resultTimeEl.textContent = formatElapsed(elapsedMs);
   resultDetailEl.textContent = getResultDetail(achieved, hallOfFameResult);
-  resultStartButton.textContent = achieved ? "Start Again" : "Return";
-  resultActionsEl.classList.toggle("is-single", !achieved && !hallOfFameResult);
-  resultActionsEl.classList.toggle("is-pair", Boolean(hallOfFameResult));
-  resultAchievementsButton.hidden = !achieved && !hallOfFameResult;
-  resultCloseButton.hidden = !achieved || Boolean(hallOfFameResult);
+  resultStartButton.textContent = "Return";
+  resultActionsEl.classList.toggle("is-single", !isChallengeResult);
+  resultActionsEl.classList.toggle("is-pair", isChallengeResult);
+  resultAchievementsButton.hidden = !isChallengeResult;
+  resultCloseButton.hidden = true;
   sigilMessagePanel.hidden = !achieved;
   resultOverlay.hidden = false;
   if (achieved || hallOfFameResult?.qualified) {
@@ -628,11 +629,6 @@ function clearFireworks() {
 }
 
 function handleResultStart() {
-  if (state.lastRunAchieved) {
-    startGame(state.lastStartMode);
-    return;
-  }
-
   hideResult();
   enterKioskMode();
 }
