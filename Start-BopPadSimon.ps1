@@ -23,6 +23,28 @@ function Test-Server {
   }
 }
 
+function Get-BrowserCommand {
+  foreach ($name in @("msedge", "chrome")) {
+    $command = Get-Command $name -ErrorAction SilentlyContinue
+    if ($command) {
+      return $command.Source
+    }
+  }
+
+  foreach ($path in @(
+    "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
+    "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
+    "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+    "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
+  )) {
+    if ($path -and (Test-Path -LiteralPath $path)) {
+      return $path
+    }
+  }
+
+  return $null
+}
+
 if (-not (Test-Server)) {
   $python = Get-Command python -ErrorAction Stop
   $server = Start-Process `
@@ -44,4 +66,9 @@ if (-not (Test-Server)) {
   }
 }
 
-Start-Process $url
+$browser = Get-BrowserCommand
+if ($browser) {
+  Start-Process -FilePath $browser -ArgumentList @("--new-window", "--start-fullscreen", $url)
+} else {
+  Start-Process $url
+}

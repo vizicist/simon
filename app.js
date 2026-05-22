@@ -15,12 +15,15 @@ const sequenceGoalSelect = document.querySelector("#sequence-goal");
 const sequenceTimingInput = document.querySelector("#sequence-timing");
 const sequenceTimingValue = document.querySelector("#sequence-timing-value");
 const startCountdownSelect = document.querySelector("#start-countdown");
+const messageVolumeInput = document.querySelector("#message-volume");
+const messageVolumeValue = document.querySelector("#message-volume-value");
 const midiStateEl = document.querySelector("#midi-state");
 const resultOverlay = document.querySelector("#result-overlay");
 const resultTitleEl = document.querySelector("#result-title");
 const resultStepsEl = document.querySelector("#result-steps");
 const resultTimeEl = document.querySelector("#result-time");
 const resultDetailEl = document.querySelector("#result-detail");
+const fireworkColors = ["#f7d35a", "#f25f4c", "#4dd76a", "#55a8ff", "#f7f4ea"];
 const resultActionsEl = document.querySelector(".result-dialog .result-actions");
 const resultStartButton = document.querySelector("#result-start");
 const resultCloseButton = document.querySelector("#result-close");
@@ -35,7 +38,7 @@ const achievementEmpty = document.querySelector("#achievement-empty");
 const achievementsCloseButton = document.querySelector("#achievements-close");
 
 const colors = ["green", "red", "yellow", "blue"];
-const sigilMessages = {
+const fallbackSigilMessages = {
   chaos: ["mp3s/chaos-2026-05-09-21.18.04-319920.mp3"],
   oracle: ["mp3s/oracle-2026-05-09-21.18.45-427404.mp3"],
   directive: [
@@ -49,6 +52,7 @@ const sigilMessages = {
     "mp3s/sacred-2026-05-09-21.22.35-674882.mp3",
   ],
 };
+const sigilMessages = { ...fallbackSigilMessages };
 const keyMap = new Map([
   ["q", 0],
   ["w", 1],
@@ -78,6 +82,7 @@ const storageKeys = {
   sequenceGoal: "sigil-sequence-goal",
   sequenceTiming: "sigil-sequence-timing",
   startCountdown: "sigil-sequence-start-countdown",
+  messageVolume: "sigil-sequence-message-volume",
 };
 
 localStorage.removeItem("sigil-sequence-achievements");
@@ -100,6 +105,8 @@ const state = {
   runId: 0,
   nextRoundTimer: null,
   responseTimeoutTimer: null,
+  sigilMessageArmTimer: null,
+  sigilMessageArmed: false,
   startedAt: null,
   correctSteps: 0,
   best: Number(localStorage.getItem(storageKeys.best) || 0),
@@ -109,6 +116,7 @@ const state = {
   activeSequenceGoal: ritualGoalSteps,
   sequenceTiming: loadSequenceTiming(),
   startCountdown: loadStartCountdown(),
+  messageVolume: loadMessageVolume(),
   recordHallOfFame: false,
   lastStartMode: "ritual",
   lastRunAchieved: false,
@@ -122,8 +130,11 @@ renderMappings();
 renderSequenceGoal();
 renderSequenceTiming();
 renderStartCountdown();
+renderMessageVolume();
 syncLearningDisplay();
+loadAvailableSigilMessages();
 autoConnectMidi();
+requestMainKioskOnStartup();
 
 connectButton.addEventListener("click", connectMidi);
 learnButton.addEventListener("click", startLearning);
@@ -137,11 +148,12 @@ inputSelect.addEventListener("change", selectMidiInput);
 sequenceGoalSelect.addEventListener("change", updateSequenceGoal);
 sequenceTimingInput.addEventListener("input", updateSequenceTiming);
 startCountdownSelect.addEventListener("change", updateStartCountdownSetting);
+messageVolumeInput.addEventListener("input", updateMessageVolume);
 resultStartButton.addEventListener("click", handleResultStart);
 resultCloseButton.addEventListener("click", hideResult);
 resultAchievementsButton.addEventListener("click", showAchievementsPage);
 sigilMessageButtons.forEach((button) => {
-  button.addEventListener("click", () => playSigilMessage(button.dataset.sigil));
+  button.addEventListener("click", handleSigilMessageClick);
 });
 advancedReturnButton.addEventListener("click", hideAdvancedPage);
 achievementsCloseButton.addEventListener("click", hideAchievementsPage);
@@ -368,12 +380,12 @@ async function startGame(mode = "ritual") {
   state.playingBack = false;
   state.recordHallOfFame = isChallenge;
   state.lastStartMode = mode;
-  state.activeSequenceGoal = isChallenge ? state.sequenceGoal : ritualGoalSteps;
+  state.activeSequenceGoal = isChallenge ? "unlimited" : state.sequenceGoal;
   state.startedAt = Date.now();
   state.correctSteps = 0;
   updateStartButton();
   const runId = state.runId;
-  await runStartCountdown(runId);
+  await runStartCountdown(runId, mode);
   if (runId !== state.runId) {
     return;
   }
@@ -397,7 +409,7 @@ function resetGame() {
   state.learning = false;
   state.learnTarget = null;
   state.recordHallOfFame = false;
-  state.activeSequenceGoal = ritualGoalSteps;
+  state.activeSequenceGoal = state.sequenceGoal;
   state.startedAt = null;
   state.correctSteps = 0;
   pads.forEach((pad) => pad.classList.remove("learn-target", "learned"));
@@ -443,26 +455,12 @@ async function playSequence(runId) {
   startResponseTimeout(runId);
 }
 
-async function runStartCountdown(runId) {
-  if (state.startCountdown === 0) {
+async function runStartCountdown(runId, mode) {
+  const countdownOverlay = createCountdownOverlay(mode);
+  await wait(3000);
+  if (runId !== state.runId) {
+    countdownOverlay.remove();
     return;
-  }
-
-  const beats = Array.from(
-    { length: state.startCountdown },
-    (_, index) => String(state.startCountdown - index),
-  );
-  beats.push("GO");
-  const countdownOverlay = createCountdownOverlay();
-
-  for (const beat of beats) {
-    if (runId !== state.runId) {
-      countdownOverlay.remove();
-      return;
-    }
-
-    countdownOverlay.querySelector(".countdown-beat").textContent = beat;
-    await wait(beat === "GO" ? 650 : 850);
   }
 
   countdownOverlay.remove();
@@ -512,8 +510,9 @@ function endGame(achieved = false) {
   updateStartButton();
   const score = getAchievedSequenceLength(achieved);
   const elapsedMs = state.startedAt ? Date.now() - state.startedAt : 0;
+  let hallOfFameResult = null;
   if (state.recordHallOfFame) {
-    saveAchievement(score, elapsedMs, achieved);
+    hallOfFameResult = saveAchievement(score, elapsedMs, achieved);
   }
   const isNewBest = score > state.best;
   if (isNewBest) {
@@ -524,7 +523,7 @@ function endGame(achieved = false) {
     }
   }
 
-  showResult(score, elapsedMs, achieved);
+  showResult(score, elapsedMs, achieved, hallOfFameResult);
 }
 
 function getAchievedSequenceLength(achieved) {
@@ -556,34 +555,170 @@ function renderMappings() {
   });
 }
 
-function showResult(steps, elapsedMs, achieved) {
+function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   stopSigilMessage();
+  disarmSigilMessages();
+  clearFireworks();
   state.lastRunAchieved = achieved;
-  resultTitleEl.textContent = achieved ? "Ritual Achieved" : "Ritual Incomplete";
+  const isChallengeResult = Boolean(hallOfFameResult);
+  resultTitleEl.textContent = getResultTitle(achieved, hallOfFameResult);
   resultStepsEl.textContent = steps;
   resultTimeEl.textContent = formatElapsed(elapsedMs);
-  resultDetailEl.textContent = achieved
-    ? "The sigil sequence reached its chosen goal."
-    : "";
-  resultStartButton.textContent = achieved ? "Start Again" : "Try Again";
-  resultActionsEl.classList.toggle("is-single", !achieved);
-  resultAchievementsButton.hidden = !achieved;
-  resultCloseButton.hidden = !achieved;
+  resultDetailEl.textContent = getResultDetail(achieved, hallOfFameResult);
+  resultStartButton.textContent = "Return";
+  resultActionsEl.classList.toggle("is-single", !isChallengeResult);
+  resultActionsEl.classList.toggle("is-pair", isChallengeResult);
+  resultAchievementsButton.hidden = !isChallengeResult;
+  resultCloseButton.hidden = true;
   sigilMessagePanel.hidden = !achieved;
   resultOverlay.hidden = false;
+  if (achieved) {
+    refreshSigilMessagesForCompletion();
+  }
+  if (achieved || hallOfFameResult?.qualified) {
+    showFireworks();
+  }
+}
+
+function getResultTitle(achieved, hallOfFameResult) {
+  if (hallOfFameResult?.qualified) {
+    return `Hall of Fame! #${hallOfFameResult.rank}`;
+  }
+
+  if (hallOfFameResult) {
+    return "Challenge Complete";
+  }
+
+  return achieved ? "Ritual Completed!!" : "Ritual Incomplete";
+}
+
+function getResultDetail(achieved, hallOfFameResult) {
+  if (hallOfFameResult?.qualified) {
+    return "";
+  }
+
+  if (hallOfFameResult) {
+    return "Not enough for the Hall of Fame.";
+  }
+
+  return "";
 }
 
 function hideResult() {
   stopSigilMessage();
+  disarmSigilMessages();
+  clearFireworks();
   resultOverlay.hidden = true;
 }
 
-function handleResultStart() {
-  if (state.lastRunAchieved) {
-    startGame(state.lastStartMode);
+function armSigilMessages() {
+  state.sigilMessageArmTimer = setTimeout(() => {
+    state.sigilMessageArmed = true;
+    state.sigilMessageArmTimer = null;
+  }, 500);
+}
+
+function disarmSigilMessages() {
+  state.sigilMessageArmed = false;
+  if (state.sigilMessageArmTimer) {
+    clearTimeout(state.sigilMessageArmTimer);
+    state.sigilMessageArmTimer = null;
+  }
+}
+
+function handleSigilMessageClick(event) {
+  if (!state.sigilMessageArmed || !event.isTrusted) {
     return;
   }
 
+  playSigilMessage(event.currentTarget.dataset.sigil);
+}
+
+function refreshSigilMessagesForCompletion() {
+  loadAvailableSigilMessages().finally(armSigilMessages);
+}
+
+async function loadAvailableSigilMessages() {
+  try {
+    const response = await fetch("mp3s/", { cache: "no-store" });
+    if (!response.ok) {
+      return;
+    }
+
+    const html = await response.text();
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const files = Array.from(doc.querySelectorAll("a"))
+      .map((link) => decodeURIComponent(link.getAttribute("href") || ""))
+      .map((href) => href.split("?")[0].split("#")[0].split("/").pop())
+      .filter((fileName) => fileName && fileName.toLowerCase().endsWith(".mp3"));
+    const discoveredMessages = groupSigilMessages(files);
+
+    Object.keys(sigilMessages).forEach((sigil) => {
+      if (discoveredMessages[sigil]?.length) {
+        sigilMessages[sigil] = discoveredMessages[sigil];
+      }
+    });
+  } catch {
+    Object.assign(sigilMessages, fallbackSigilMessages);
+  }
+}
+
+function groupSigilMessages(fileNames) {
+  return fileNames.reduce((messages, fileName) => {
+    const sigil = Object.keys(sigilMessages).find((name) => {
+      return fileName.toLowerCase().startsWith(`${name}-`);
+    });
+
+    if (sigil) {
+      messages[sigil].push(`mp3s/${encodeURIComponent(fileName)}`);
+    }
+
+    return messages;
+  }, createEmptySigilMessages());
+}
+
+function createEmptySigilMessages() {
+  return Object.fromEntries(Object.keys(sigilMessages).map((sigil) => [sigil, []]));
+}
+
+function showFireworks() {
+  const layer = document.createElement("div");
+  layer.className = "fireworks-layer";
+  layer.setAttribute("aria-hidden", "true");
+
+  const positions = [
+    [10, 18],
+    [25, 10],
+    [43, 18],
+    [62, 10],
+    [84, 18],
+    [16, 42],
+    [36, 34],
+    [58, 36],
+    [78, 42],
+    [24, 66],
+    [50, 58],
+    [76, 66],
+  ];
+
+  positions.forEach(([x, y], index) => {
+    const burst = document.createElement("span");
+    burst.className = "firework";
+    burst.style.setProperty("--x", `${x}vw`);
+    burst.style.setProperty("--y", `${y}vh`);
+    burst.style.setProperty("--delay", `${index * 180}ms`);
+    burst.style.setProperty("--spark", fireworkColors[index % fireworkColors.length]);
+    layer.append(burst);
+  });
+
+  resultOverlay.prepend(layer);
+}
+
+function clearFireworks() {
+  resultOverlay.querySelectorAll(".fireworks-layer").forEach((layer) => layer.remove());
+}
+
+function handleResultStart() {
   hideResult();
   enterKioskMode();
 }
@@ -597,6 +732,7 @@ function playSigilMessage(sigil) {
   stopSigilMessage();
   const src = sources[Math.floor(Math.random() * sources.length)];
   const audio = new Audio(src);
+  audio.volume = state.messageVolume;
   state.activeSigilMessage = audio;
   audio.addEventListener("ended", () => {
     if (state.activeSigilMessage === audio) {
@@ -642,18 +778,28 @@ function hideAdvancedPage() {
 
 function saveAchievement(steps, elapsedMs, achieved) {
   const achievements = loadAchievements();
-  achievements.push({
+  const record = {
     achieved,
     elapsedMs,
     finishedAt: new Date().toISOString(),
     goal: state.activeSequenceGoal,
     steps,
-  });
+  };
+  achievements.push(record);
+
+  const sorted = sortAchievements(achievements);
+  const saved = sorted.slice(0, 10);
+  const rankIndex = saved.indexOf(record);
 
   localStorage.setItem(
     storageKeys.achievements,
-    JSON.stringify(sortAchievements(achievements).slice(0, 5)),
+    JSON.stringify(saved),
   );
+
+  return {
+    qualified: rankIndex !== -1,
+    rank: rankIndex === -1 ? null : rankIndex + 1,
+  };
 }
 
 function isSequenceGoalReached() {
@@ -690,16 +836,35 @@ function renderStartCountdown() {
   startCountdownSelect.value = String(state.startCountdown);
 }
 
+function updateMessageVolume() {
+  state.messageVolume = normalizeMessageVolume(messageVolumeInput.value);
+  localStorage.setItem(storageKeys.messageVolume, String(state.messageVolume));
+  renderMessageVolume();
+
+  if (state.activeSigilMessage) {
+    state.activeSigilMessage.volume = state.messageVolume;
+  }
+}
+
+function renderMessageVolume() {
+  messageVolumeInput.value = String(state.messageVolume);
+  messageVolumeValue.textContent = `${Math.round(state.messageVolume * 100)}%`;
+}
+
 function loadSequenceGoal() {
-  return normalizeSequenceGoal(localStorage.getItem(storageKeys.sequenceGoal) || "unlimited");
+  return normalizeSequenceGoal(localStorage.getItem(storageKeys.sequenceGoal) || "4");
 }
 
 function loadSequenceTiming() {
-  return normalizeSequenceTiming(localStorage.getItem(storageKeys.sequenceTiming) || "1");
+  return normalizeSequenceTiming(localStorage.getItem(storageKeys.sequenceTiming) || "0.25");
 }
 
 function loadStartCountdown() {
   return normalizeStartCountdown(localStorage.getItem(storageKeys.startCountdown) || "3");
+}
+
+function loadMessageVolume() {
+  return normalizeMessageVolume(localStorage.getItem(storageKeys.messageVolume) || "0.2");
 }
 
 function normalizeSequenceGoal(value) {
@@ -733,12 +898,21 @@ function normalizeStartCountdown(value) {
   return 3;
 }
 
+function normalizeMessageVolume(value) {
+  const numericValue = Number(value);
+  if (Number.isFinite(numericValue)) {
+    return Math.min(1, Math.max(0, Math.round(numericValue * 100) / 100));
+  }
+
+  return 1;
+}
+
 function getSequenceStepDurationMs() {
   return Math.round(state.sequenceTiming * 1000);
 }
 
 function renderAchievements() {
-  const achievements = sortAchievements(loadAchievements()).slice(0, 5);
+  const achievements = sortAchievements(loadAchievements()).slice(0, 10);
   achievementList.replaceChildren();
   achievementEmpty.hidden = achievements.length > 0;
 
@@ -749,15 +923,11 @@ function renderAchievements() {
     rank.className = "achievement-rank";
     rank.textContent = `#${index + 1}`;
 
-    const time = document.createElement("strong");
-    time.className = "achievement-time";
-    time.textContent = formatElapsed(achievement.elapsedMs);
+    const result = document.createElement("strong");
+    result.className = "achievement-result";
+    result.textContent = `${formatStepCount(achievement.steps)} in ${formatElapsedSeconds(achievement.elapsedMs)}`;
 
-    const steps = document.createElement("span");
-    steps.className = "achievement-steps";
-    steps.textContent = `${achievement.steps} steps`;
-
-    item.append(rank, time, steps);
+    item.append(rank, result);
     achievementList.append(item);
   });
 }
@@ -790,15 +960,30 @@ function syncLearningDisplay() {
 
 function updateStartButton() {
   startButton.textContent = state.gameActive && state.lastStartMode === "ritual"
-    ? `Restart Ritual - Complete ${ritualGoalSteps} Steps to Access Ritual Recordings`
-    : `Start Ritual - Complete ${ritualGoalSteps} Steps to Access Ritual Recordings`;
+    ? "Restart Ritual"
+    : "Start Ritual to Access Recorded Messages";
   hallOfFameChallengeButton.textContent = state.gameActive && state.lastStartMode === "challenge"
     ? "Restart Hall of Fame Challenge"
     : "Start Hall of Fame Challenge";
 }
 
+function requestMainKioskOnStartup() {
+  const request = () => {
+    if (advancedPage.hidden && resultOverlay.hidden && achievementsPage.hidden) {
+      enterKioskMode();
+    }
+  };
+
+  if (document.readyState === "complete") {
+    setTimeout(request, 100);
+    return;
+  }
+
+  window.addEventListener("load", () => setTimeout(request, 100), { once: true });
+}
+
 function requestMainKioskOnce() {
-  if (advancedPage.hidden && resultOverlay.hidden) {
+  if (advancedPage.hidden && resultOverlay.hidden && achievementsPage.hidden) {
     enterKioskMode();
   }
 }
@@ -867,20 +1052,45 @@ function formatElapsed(ms) {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-function createCountdownOverlay() {
+function formatElapsedSeconds(ms) {
+  const seconds = Math.max(0, Math.round(ms / 1000));
+  return `${seconds} ${seconds === 1 ? "second" : "seconds"}`;
+}
+
+function formatStepCount(steps) {
+  return `${steps} ${steps === 1 ? "step" : "steps"}`;
+}
+
+function createCountdownOverlay(mode) {
   const overlay = document.createElement("div");
   overlay.className = "countdown-overlay";
+  const boardRect = boardEl.getBoundingClientRect();
+  overlay.style.setProperty("--cue-center-y", `${boardRect.top + boardRect.height / 2}px`);
 
   const message = document.createElement("span");
   message.className = "countdown-message";
-  message.textContent = "Match the Sigil Sequence";
+  const title = document.createElement("span");
+  title.textContent = "Match the Sequence";
+  message.append(title);
 
-  const beat = document.createElement("strong");
-  beat.className = "countdown-beat";
+  if (mode === "ritual") {
+    const detail = document.createElement("span");
+    detail.className = "countdown-detail";
+    detail.textContent = getRitualStartDetail();
+    message.append(detail);
+  }
 
-  overlay.append(message, beat);
+  overlay.append(message);
   document.body.append(overlay);
   return overlay;
+}
+
+function getRitualStartDetail() {
+  if (Number.isInteger(state.activeSequenceGoal)) {
+    return `${state.activeSequenceGoal} Steps will Complete the Ritual`;
+  }
+
+  return "Keep Matching the Sequence";
 }
 
 function loadPadNotes() {

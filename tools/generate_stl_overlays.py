@@ -19,6 +19,21 @@ BASE_THICKNESS_MM = 1.2
 RELIEF_HEIGHT_MM = 0.9
 GRID_CELLS = 180
 SIGIL_SIZE_MM = 58.0
+UI_DEFAULT_SHAPE_SIZE = 68.0
+
+SIGIL_SIZE_MULTIPLIERS = {
+    "chaos": 78.0 / UI_DEFAULT_SHAPE_SIZE,
+    "oracle": 1.0,
+    "directive": 1.0,
+    "sacred": 82.0 / UI_DEFAULT_SHAPE_SIZE,
+}
+
+QUADRANTS = {
+    "chaos": "top_left",
+    "oracle": "top_right",
+    "directive": "bottom_left",
+    "sacred": "bottom_right",
+}
 
 TOKEN_RE = re.compile(r"[MmZzLlHhVvCcSsQqTtAa]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
 
@@ -218,23 +233,67 @@ def parse_transform(transform: str):
     return tx, ty, sx, sy
 
 
-def load_svg_polygons(svg_path: Path) -> list[list[tuple[float, float]]]:
+def load_svg_paths(svg_path: Path) -> list[list[list[tuple[float, float]]]]:
     tree = ElementTree.parse(svg_path)
     root = tree.getroot()
     ns = {"svg": "http://www.w3.org/2000/svg"}
     group = root.find(".//svg:g", ns)
     tx, ty, sx, sy = parse_transform(group.attrib.get("transform", "") if group is not None else "")
-    polygons = []
+    path_groups = []
     for path in root.findall(".//svg:path", ns):
+        polygons = []
         for poly in parse_path(path.attrib["d"]):
             transformed = [(x * sx + tx, y * sy + ty) for x, y in poly]
             if len(transformed) > 2:
                 polygons.append(transformed)
-    return polygons
+        if polygons:
+            path_groups.append(polygons)
+    return path_groups
 
 
-def make_sigil_mask(svg_path: Path, cells: int) -> Image.Image:
-    polygons = load_svg_polygons(svg_path)
+def polygon_area(poly: list[tuple[float, float]]) -> float:
+    area = 0.0
+    for index, point in enumerate(poly):
+        next_point = poly[(index + 1) % len(poly)]
+        area += point[0] * next_point[1] - next_point[0] * point[1]
+    return area / 2
+
+
+def quadrant_center(quadrant: str) -> tuple[float, float]:
+    offset = 4 * OVERLAY_WIDTH_MM / (3 * math.pi)
+    if quadrant == "top_left":
+        return (OVERLAY_WIDTH_MM - offset, offset)
+    if quadrant == "top_right":
+        return (offset, offset)
+    if quadrant == "bottom_left":
+        return (OVERLAY_WIDTH_MM - offset, OVERLAY_WIDTH_MM - offset)
+    if quadrant == "bottom_right":
+        return (offset, OVERLAY_WIDTH_MM - offset)
+    raise ValueError(f"Unknown quadrant: {quadrant}")
+
+
+def is_inside_quadrant(x_mm: float, y_mm: float, quadrant: str) -> bool:
+    radius = OVERLAY_WIDTH_MM
+    if quadrant == "top_left":
+        dx = radius - x_mm
+        dy = y_mm
+    elif quadrant == "top_right":
+        dx = x_mm
+        dy = y_mm
+    elif quadrant == "bottom_left":
+        dx = radius - x_mm
+        dy = radius - y_mm
+    elif quadrant == "bottom_right":
+        dx = x_mm
+        dy = radius - y_mm
+    else:
+        raise ValueError(f"Unknown quadrant: {quadrant}")
+    return dx * dx + dy * dy <= radius * radius
+
+
+def make_sigil_mask(svg_path: Path, cells: int, quadrant: str, sigil_size_mm: float) -> Image.Image:
+    path_groups = load_svg_paths(svg_path)
+    polygons = [poly for group in path_groups for poly in group]
     points = [point for poly in polygons for point in poly]
     min_x = min(p[0] for p in points)
     max_x = max(p[0] for p in points)
@@ -243,21 +302,28 @@ def make_sigil_mask(svg_path: Path, cells: int) -> Image.Image:
     width = max_x - min_x
     height = max_y - min_y
 
-    scale = (SIGIL_SIZE_MM / OVERLAY_WIDTH_MM * cells) / max(width, height)
-    center = (4 * OVERLAY_WIDTH_MM / (3 * math.pi), 4 * OVERLAY_WIDTH_MM / (3 * math.pi))
+    scale = (sigil_size_mm / OVERLAY_WIDTH_MM * cells) / max(width, height)
+    center = quadrant_center(quadrant)
     center_px = (center[0] / OVERLAY_WIDTH_MM * cells, (1 - center[1] / OVERLAY_WIDTH_MM) * cells)
 
     mask = Image.new("L", (cells, cells), 0)
     draw = ImageDraw.Draw(mask)
-    for poly in polygons:
-        mapped = [
-            (
-                center_px[0] + (x - (min_x + max_x) / 2) * scale,
-                center_px[1] + (y - (min_y + max_y) / 2) * scale,
-            )
-            for x, y in poly
-        ]
-        draw.polygon(mapped, fill=255)
+    for group in path_groups:
+        mapped_group = []
+        for poly in group:
+            mapped_group.append([
+                (
+                    center_px[0] + (x - (min_x + max_x) / 2) * scale,
+                    center_px[1] + (y - (min_y + max_y) / 2) * scale,
+                )
+                for x, y in poly
+            ])
+
+        base_area = next((polygon_area(poly) for poly in mapped_group if abs(polygon_area(poly)) > 0.01), 0)
+        for poly in mapped_group:
+            area = polygon_area(poly)
+            fill = 0 if base_area and area * base_area < 0 else 255
+            draw.polygon(poly, fill=fill)
     return mask
 
 
@@ -289,7 +355,7 @@ def write_binary_stl(path: Path, triangles):
             fh.write(struct.pack("<H", 0))
 
 
-def build_overlay(mask: Image.Image):
+def build_overlay(mask: Image.Image, quadrant: str):
     cells = GRID_CELLS
     cell = OVERLAY_WIDTH_MM / cells
     inside = [[False] * cells for _ in range(cells)]
@@ -299,7 +365,7 @@ def build_overlay(mask: Image.Image):
         for x in range(cells):
             cx = (x + 0.5) * cell
             cy = (y + 0.5) * cell
-            if cx * cx + cy * cy <= OVERLAY_WIDTH_MM * OVERLAY_WIDTH_MM:
+            if is_inside_quadrant(cx, cy, quadrant):
                 inside[y][x] = True
                 mask_y = cells - 1 - y
                 raised = pixels[x, mask_y] > 0
@@ -342,10 +408,12 @@ def build_overlay(mask: Image.Image):
 def main():
     OUTPUT_DIR.mkdir(exist_ok=True)
     for name in ["chaos", "oracle", "directive", "sacred"]:
-        mask = make_sigil_mask(SHAPE_DIR / f"{name}.svg", GRID_CELLS)
-        triangles = build_overlay(mask)
+        quadrant = QUADRANTS[name]
+        sigil_size_mm = SIGIL_SIZE_MM * SIGIL_SIZE_MULTIPLIERS[name]
+        mask = make_sigil_mask(SHAPE_DIR / f"{name}.svg", GRID_CELLS, quadrant, sigil_size_mm)
+        triangles = build_overlay(mask, quadrant)
         write_binary_stl(OUTPUT_DIR / f"sigil_overlay_{name}.stl", triangles)
-        print(f"{name}: {len(triangles)} triangles")
+        print(f"{name} ({quadrant}, {sigil_size_mm:.2f}mm sigil): {len(triangles)} triangles")
 
 
 if __name__ == "__main__":
