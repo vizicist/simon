@@ -370,7 +370,7 @@ async function startGame(mode = "ritual") {
   state.playingBack = false;
   state.recordHallOfFame = isChallenge;
   state.lastStartMode = mode;
-  state.activeSequenceGoal = isChallenge ? "unlimited" : ritualGoalSteps;
+  state.activeSequenceGoal = isChallenge ? "unlimited" : state.sequenceGoal;
   state.startedAt = Date.now();
   state.correctSteps = 0;
   updateStartButton();
@@ -399,7 +399,7 @@ function resetGame() {
   state.learning = false;
   state.learnTarget = null;
   state.recordHallOfFame = false;
-  state.activeSequenceGoal = ritualGoalSteps;
+  state.activeSequenceGoal = state.sequenceGoal;
   state.startedAt = null;
   state.correctSteps = 0;
   pads.forEach((pad) => pad.classList.remove("learn-target", "learned"));
@@ -961,13 +961,21 @@ function createCountdownOverlay(mode) {
   if (mode === "ritual") {
     const detail = document.createElement("span");
     detail.className = "countdown-detail";
-    detail.textContent = `${ritualGoalSteps} Steps will Complete the Ritual`;
+    detail.textContent = getRitualStartDetail();
     message.append(detail);
   }
 
   overlay.append(message);
   document.body.append(overlay);
   return overlay;
+}
+
+function getRitualStartDetail() {
+  if (Number.isInteger(state.activeSequenceGoal)) {
+    return `${state.activeSequenceGoal} Steps will Complete the Ritual`;
+  }
+
+  return "Keep Matching the Sequence";
 }
 
 function loadPadNotes() {
