@@ -852,11 +852,11 @@ function renderMessageVolume() {
 }
 
 function loadSequenceGoal() {
-  return normalizeSequenceGoal(localStorage.getItem(storageKeys.sequenceGoal) || "unlimited");
+  return normalizeSequenceGoal(localStorage.getItem(storageKeys.sequenceGoal) || "4");
 }
 
 function loadSequenceTiming() {
-  return normalizeSequenceTiming(localStorage.getItem(storageKeys.sequenceTiming) || "1");
+  return normalizeSequenceTiming(localStorage.getItem(storageKeys.sequenceTiming) || "0.25");
 }
 
 function loadStartCountdown() {
@@ -864,7 +864,7 @@ function loadStartCountdown() {
 }
 
 function loadMessageVolume() {
-  return normalizeMessageVolume(localStorage.getItem(storageKeys.messageVolume) || "1");
+  return normalizeMessageVolume(localStorage.getItem(storageKeys.messageVolume) || "0.2");
 }
 
 function normalizeSequenceGoal(value) {
