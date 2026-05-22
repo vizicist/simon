@@ -638,6 +638,33 @@ p {
   filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.32));
 }
 
+.sigil-refresh-button {
+  width: 100%;
+  min-height: 54px;
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: clamp(1.08rem, 2vw, 1.4rem);
+  font-weight: 700;
+  line-height: 1.08;
+}
+
+.sigil-refresh-button:hover,
+.sigil-refresh-button:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+  outline: 2px solid rgba(255, 219, 116, 0.72);
+}
+
+.sigil-refresh-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .result-actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
