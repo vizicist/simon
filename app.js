@@ -574,7 +574,7 @@ function getResultTitle(achieved, hallOfFameResult) {
     return "Challenge Complete";
   }
 
-  return achieved ? "Ritual Achieved!!" : "Ritual Incomplete";
+  return achieved ? "Ritual Completed!!" : "Ritual Incomplete";
 }
 
 function getResultDetail(achieved, hallOfFameResult) {
