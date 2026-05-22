@@ -485,22 +485,32 @@ p {
   position: absolute;
   left: var(--x);
   top: var(--y);
-  width: 8px;
-  height: 8px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   color: var(--spark);
   background: currentColor;
   opacity: 0;
-  animation: firework-burst 1600ms ease-out var(--delay) 4 both;
+  animation: firework-burst 1900ms ease-out var(--delay) 4 both;
+  filter: drop-shadow(0 0 16px currentColor);
   box-shadow:
-    0 -54px 0 -2px currentColor,
-    38px -38px 0 -2px currentColor,
-    54px 0 0 -2px currentColor,
-    38px 38px 0 -2px currentColor,
-    0 54px 0 -2px currentColor,
-    -38px 38px 0 -2px currentColor,
-    -54px 0 0 -2px currentColor,
-    -38px -38px 0 -2px currentColor;
+    0 -110px 0 -1px currentColor,
+    78px -78px 0 -1px currentColor,
+    110px 0 0 -1px currentColor,
+    78px 78px 0 -1px currentColor,
+    0 110px 0 -1px currentColor,
+    -78px 78px 0 -1px currentColor,
+    -110px 0 0 -1px currentColor,
+    -78px -78px 0 -1px currentColor,
+    0 -58px 0 0 currentColor,
+    42px -42px 0 0 currentColor,
+    58px 0 0 0 currentColor,
+    42px 42px 0 0 currentColor,
+    0 58px 0 0 currentColor,
+    -42px 42px 0 0 currentColor,
+    -58px 0 0 0 currentColor,
+    -42px -42px 0 0 currentColor,
+    0 0 36px 12px currentColor;
 }
 
 .result-dialog,
@@ -779,18 +789,19 @@ select {
 @keyframes firework-burst {
   0% {
     opacity: 0;
-    transform: scale(0.2);
-    filter: brightness(1.4);
+    transform: scale(0.12);
+    filter: brightness(2.3) saturate(1.45);
   }
 
   16% {
     opacity: 1;
+    filter: brightness(2.8) saturate(1.75);
   }
 
   100% {
     opacity: 0;
-    transform: scale(1.9);
-    filter: brightness(1);
+    transform: scale(2.45);
+    filter: brightness(1.35) saturate(1.25);
   }
 }
 
