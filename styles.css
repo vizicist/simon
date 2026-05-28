@@ -44,15 +44,15 @@
 
 html,
 body {
+  width: 100%;
   height: 100%;
   overflow: hidden;
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at 18% 14%, rgba(32, 104, 112, 0.28), transparent 24rem),
-    linear-gradient(135deg, #102c2f 0%, #153f43 42%, #0f1416 100%);
+  background: #113f43;
   color: var(--text);
   font-family: "Space Mono", ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
@@ -63,20 +63,43 @@ select {
 }
 
 .app {
+  width: 100%;
   height: 100dvh;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: clamp(12px, 3vh, 28px);
   overflow: hidden;
+  overflow-x: clip;
 }
 
 .stage {
-  height: 100%;
-  width: min(1180px, 100%);
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
   display: grid;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: 1fr auto auto 1fr auto;
   align-items: center;
-  align-content: center;
+  justify-items: center;
+}
+
+#pre-game-start {
+  grid-row: 3;
+}
+
+#in-game-controls {
+  grid-row: 5;
+}
+
+#pre-game-start {
+  width: min(84dvw, 100%);
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: center;
+}
+
+#pre-game-hof {
+  grid-row: 5;
 }
 
 .advanced-hotspot {
@@ -94,19 +117,32 @@ select {
 }
 
 .status-bar {
+  width: 100%;
+  min-width: 0;
   display: grid;
   justify-items: center;
+  margin-bottom: clamp(18px, 3vh, 42px);
   text-align: center;
-  margin-bottom: clamp(8px, 2vh, 22px);
+}
+
+.status-bar > div {
+  max-width: min(100%, calc(100dvw - 48px));
+  min-width: 0;
+  overflow: hidden;
 }
 
 h1 {
   margin: 0 0 6px;
   font-family: "Burra Regular", Inter, ui-sans-serif, system-ui, sans-serif;
   font-weight: 400;
-  font-size: clamp(1.8rem, 5.5vw, 4.2rem);
+  max-width: min(100%, calc(100dvw - 48px));
+  overflow: hidden;
+  font-size: clamp(2.2rem, 6.6vw, 5.1rem);
   line-height: 0.95;
-  word-spacing: 0.22em;
+  text-align: center;
+  text-overflow: clip;
+  white-space: nowrap;
+  word-spacing: 0.14em;
 }
 
 p {
@@ -130,13 +166,12 @@ p {
   position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(130px, 1fr));
-  width: min(100%, 720px, calc(100dvh - 260px));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  width: min(100%, 720px, calc(100dvh - 520px));
   aspect-ratio: 1;
-  margin: 0 auto;
+  margin: clamp(24px, 5vh, 60px) auto 0;
   padding: clamp(54px, 8.5vw, 84px);
-  background:
-    radial-gradient(circle at 50% 50%, transparent 66%, rgba(255, 255, 255, 0.05) 66.5%, transparent 67.5%),
-    linear-gradient(145deg, #27292d 0%, #111215 56%, #050607 100%);
+  background: #111215;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 50%;
   box-shadow:
@@ -174,6 +209,7 @@ p {
   position: relative;
   z-index: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -299,7 +335,7 @@ p {
 
 .controls {
   width: min(1120px, 100%);
-  margin: clamp(0px, 0.6vh, 8px) auto 0;
+  margin: clamp(20px, 4.5vh, 60px) auto 0;
 }
 
 .midi-panel {
@@ -311,6 +347,7 @@ p {
   position: fixed;
   inset: 0;
   z-index: 11;
+  width: 100%;
   padding: 24px;
   background: rgba(8, 9, 11, 0.44);
   text-align: center;
@@ -318,24 +355,41 @@ p {
 }
 
 .countdown-message {
-  position: absolute;
-  left: 50%;
+  position: fixed;
+  left: 0;
+  right: 0;
   top: var(--cue-center-y, 50%);
-  width: min(1100px, calc(100vw - 48px));
-  display: grid;
+  width: auto;
+  max-width: none;
+  padding-inline: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 0.18em;
   color: var(--text);
   font-size: clamp(2.2rem, 8vw, 7rem);
   font-weight: 700;
   line-height: 0.95;
+  text-align: center;
   text-wrap: balance;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
+}
+
+.countdown-title {
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .countdown-detail {
-  font-size: clamp(1.1rem, 3vw, 2.4rem);
+  display: block;
+  width: 100%;
+  font-size: clamp(2.2rem, 6vw, 4.8rem);
   font-weight: 400;
   line-height: 1.05;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .countdown-beat {
@@ -350,6 +404,10 @@ p {
   justify-content: center;
   column-gap: 10px;
   row-gap: clamp(20px, 3.6vh, 38px);
+}
+
+.controls[hidden] {
+  display: none;
 }
 
 .controls button,
@@ -372,11 +430,12 @@ p {
 }
 
 #start {
-  grid-column: 1 / -1;
   justify-self: center;
-  width: min(1048px, 100%);
-  font-size: clamp(1.6rem, 3.35vw, 2.55rem);
-  min-height: 70px;
+  width: 100%;
+  overflow: hidden;
+  font-size: clamp(2rem, 2.35vw, 3rem);
+  min-height: 106px;
+  text-align: center;
 }
 
 #hall-of-fame-challenge,
@@ -411,6 +470,46 @@ p {
 .advanced-return:disabled {
   cursor: not-allowed;
   opacity: 0.48;
+}
+
+.in-game-controls {
+  text-align: center;
+}
+
+.ritual-progress {
+  grid-column: 1 / -1;
+  margin: 0 0 clamp(8px, 1.6vh, 18px);
+  color: var(--text);
+  font-size: clamp(1.6rem, 3.35vw, 2.55rem);
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.ritual-progress[hidden] {
+  display: block;
+  visibility: hidden;
+}
+
+#restart-ritual,
+#return-ritual {
+  width: min(683px, 100%);
+  min-height: 95px;
+  padding: 18px 28px;
+  font-size: clamp(2.06rem, 3.68vw, 2.71rem);
+}
+
+#restart-ritual {
+  justify-self: end;
+}
+
+#return-ritual {
+  justify-self: start;
+}
+
+.in-game-controls.is-challenge #return-ritual {
+  grid-column: 1 / -1;
+  justify-self: center;
 }
 
 .advanced-page {
@@ -559,16 +658,18 @@ p {
 
 #result-title {
   font-size: clamp(1.35rem, 5vw, 3.6rem);
-  overflow-wrap: normal;
-  text-wrap: nowrap;
-  white-space: nowrap;
+  line-height: 1.04;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  white-space: normal;
 }
 
 .result-stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  margin: 28px 0 18px;
+  margin: clamp(18px, 3vw, 28px) 0 18px;
 }
 
 .result-stats span {
@@ -593,6 +694,15 @@ p {
   min-height: 1.25em;
 }
 
+#result-detail.is-featured {
+  color: var(--text);
+  font-size: clamp(1.35rem, 5vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.04;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
 .sigil-message-panel {
   margin-top: 22px;
 }
@@ -611,7 +721,7 @@ p {
 
 .sigil-message-actions {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
 }
 
@@ -638,10 +748,16 @@ p {
   filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.32));
 }
 
+.sigil-footer {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
 .sigil-refresh-button {
   width: 100%;
   min-height: 54px;
-  margin-top: 12px;
   padding: 10px 16px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
@@ -839,6 +955,11 @@ select {
 @media (max-width: 700px) {
   .app {
     padding: 16px;
+  }
+
+  h1 {
+    font-size: 1.55rem;
+    word-spacing: 0.08em;
   }
 
   .status-bar {

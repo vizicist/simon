@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sigil Sequence Ritual</title>
-    <link rel="stylesheet" href="styles.css?v=77">
+    <title>Prophecy Sequence Ritual</title>
+    <link rel="stylesheet" href="styles.css?v=92">
   </head>
   <body>
     <main class="app" aria-labelledby="title">
@@ -13,7 +13,7 @@
       <section class="stage">
         <div class="status-bar">
           <div>
-            <h1 id="title">Sigil Sequence Ritual</h1>
+            <h1 id="title">Prophecy Sequence Ritual</h1>
             <p id="subtitle"></p>
           </div>
         </div>
@@ -37,8 +37,17 @@
           </button>
         </div>
 
-        <div class="controls" aria-label="Game controls">
-          <button id="start" type="button">Start Ritual to Access Recorded Messages</button>
+        <div class="controls" id="pre-game-start" aria-label="Game start">
+          <button id="start" type="button">Start Ritual to Access Recorded Prophecies</button>
+        </div>
+
+        <div class="controls in-game-controls" id="in-game-controls" aria-label="Ritual progress" hidden>
+          <p class="ritual-progress" id="ritual-progress">0 of 4 Ritual Steps are Complete</p>
+          <button id="restart-ritual" type="button">Restart Ritual</button>
+          <button id="return-ritual" type="button">Return</button>
+        </div>
+
+        <div class="controls" id="pre-game-hof" aria-label="Hall of Fame controls">
           <button id="hall-of-fame-challenge" type="button">Start Hall of Fame Challenge</button>
           <button id="show-hall-of-fame" type="button">Show Hall of Fame</button>
         </div>
@@ -122,7 +131,7 @@
           </div>
           <p id="result-detail">Press Start to play again.</p>
           <div class="sigil-message-panel" id="sigil-message-panel" hidden>
-            <h3>Select the Sigil message you want to hear</h3>
+            <h3>Select the Prophecy You Want To Hear</h3>
             <div class="sigil-message-actions" aria-label="Sigil messages">
               <button class="sigil-message-button" type="button" data-sigil="chaos" aria-label="Play Chaos sigil message">
                 <img src="assets/shapes/chaos.svg" alt="">
@@ -137,7 +146,10 @@
                 <img src="assets/shapes/sacred.svg" alt="">
               </button>
             </div>
-            <button class="sigil-refresh-button" id="sigil-refresh" type="button">Look for New Messages</button>
+            <div class="sigil-footer">
+              <button class="sigil-refresh-button" id="sigil-refresh" type="button">Retrieve New Prophecies</button>
+              <button class="sigil-refresh-button" id="sigil-return" type="button">Return</button>
+            </div>
           </div>
           <div class="result-actions">
             <button id="result-start" type="button">Start Again</button>
@@ -149,7 +161,7 @@
 
       <section class="achievements-page" id="achievements-page" aria-labelledby="achievements-title" aria-modal="true" role="dialog" hidden>
         <div class="achievements-panel">
-          <h2 id="achievements-title">Sigil Sequence Hall of Fame</h2>
+          <h2 id="achievements-title">Prophecy Sequence Hall of Fame</h2>
           <ol class="achievement-list" id="achievement-list"></ol>
           <p class="achievement-empty" id="achievement-empty">Complete a run to begin the record.</p>
           <div class="result-actions">
@@ -159,6 +171,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=72"></script>
+    <script src="app.js?v=78"></script>
   </body>
 </html>

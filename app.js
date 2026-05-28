@@ -7,6 +7,12 @@ const learnButton = document.querySelector("#learn");
 const startButton = document.querySelector("#start");
 const hallOfFameChallengeButton = document.querySelector("#hall-of-fame-challenge");
 const showHallOfFameButton = document.querySelector("#show-hall-of-fame");
+const preGameStart = document.querySelector("#pre-game-start");
+const preGameHof = document.querySelector("#pre-game-hof");
+const inGameControls = document.querySelector("#in-game-controls");
+const ritualProgressEl = document.querySelector("#ritual-progress");
+const restartRitualButton = document.querySelector("#restart-ritual");
+const returnRitualButton = document.querySelector("#return-ritual");
 const advancedHotspot = document.querySelector("#advanced-hotspot");
 const resetButton = document.querySelector("#reset");
 const boardEl = document.querySelector(".board");
@@ -31,6 +37,7 @@ const resultAchievementsButton = document.querySelector("#result-achievements");
 const sigilMessagePanel = document.querySelector("#sigil-message-panel");
 const sigilMessageButtons = Array.from(document.querySelectorAll(".sigil-message-button"));
 const sigilRefreshButton = document.querySelector("#sigil-refresh");
+const sigilReturnButton = document.querySelector("#sigil-return");
 const advancedPage = document.querySelector("#advanced-page");
 const advancedReturnButton = document.querySelector("#advanced-return");
 const achievementsPage = document.querySelector("#achievements-page");
@@ -110,6 +117,7 @@ const state = {
   sigilMessageArmed: false,
   startedAt: null,
   correctSteps: 0,
+  completedRounds: 0,
   best: Number(localStorage.getItem(storageKeys.best) || 0),
   padNotes: loadedPadNotes.notes,
   hasSavedMapping: loadedPadNotes.saved,
@@ -143,6 +151,8 @@ learnButton.addEventListener("click", startLearning);
 startButton.addEventListener("click", () => startGame("ritual"));
 hallOfFameChallengeButton.addEventListener("click", () => startGame("challenge"));
 showHallOfFameButton.addEventListener("click", showAchievementsPage);
+restartRitualButton.addEventListener("click", () => startGame("ritual"));
+returnRitualButton.addEventListener("click", resetGame);
 if (resetButton) {
   resetButton.addEventListener("click", resetGame);
 }
@@ -158,10 +168,10 @@ sigilMessageButtons.forEach((button) => {
   button.addEventListener("click", handleSigilMessageClick);
 });
 sigilRefreshButton.addEventListener("click", handleSigilRefresh);
+sigilReturnButton.addEventListener("click", handleResultStart);
 advancedReturnButton.addEventListener("click", hideAdvancedPage);
 achievementsCloseButton.addEventListener("click", hideAchievementsPage);
 advancedHotspot.addEventListener("click", handleAdvancedHotspot);
-window.addEventListener("pointerdown", requestMainKioskOnce, { once: true });
 
 pads.forEach((pad) => {
   pad.addEventListener("pointerdown", () => {
@@ -386,7 +396,9 @@ async function startGame(mode = "ritual") {
   state.activeSequenceGoal = isChallenge ? "unlimited" : state.sequenceGoal;
   state.startedAt = Date.now();
   state.correctSteps = 0;
+  state.completedRounds = 0;
   updateStartButton();
+  updateInGameControls();
   const runId = state.runId;
   await runStartCountdown(runId, mode);
   if (runId !== state.runId) {
@@ -415,10 +427,12 @@ function resetGame() {
   state.activeSequenceGoal = state.sequenceGoal;
   state.startedAt = null;
   state.correctSteps = 0;
+  state.completedRounds = 0;
   pads.forEach((pad) => pad.classList.remove("learn-target", "learned"));
   learnButton.textContent = "Learn Pads";
   syncLearningDisplay();
   updateStartButton();
+  updateInGameControls();
   updateRound();
 }
 
@@ -428,6 +442,7 @@ function addRound() {
   state.playerIndex = 0;
   state.acceptingInput = false;
   updateRound();
+  updateInGameControls();
   playSequence(state.runId);
 }
 
@@ -494,6 +509,8 @@ function handlePad(padIndex, velocity = 96) {
   state.playerIndex += 1;
   if (state.playerIndex === state.sequence.length) {
     state.acceptingInput = false;
+    state.completedRounds += 1;
+    updateInGameControls();
     if (isSequenceGoalReached()) {
       completeRitual();
       return;
@@ -511,6 +528,7 @@ function endGame(achieved = false) {
   state.acceptingInput = false;
   state.gameActive = false;
   updateStartButton();
+  updateInGameControls();
   const score = getAchievedSequenceLength(achieved);
   const elapsedMs = state.startedAt ? Date.now() - state.startedAt : 0;
   let hallOfFameResult = null;
@@ -564,12 +582,15 @@ function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
   clearFireworks();
   state.lastRunAchieved = achieved;
   const isChallengeResult = Boolean(hallOfFameResult);
+  const isHallOfFameResult = Boolean(hallOfFameResult?.qualified);
   resultTitleEl.textContent = getResultTitle(achieved, hallOfFameResult);
   resultStepsEl.textContent = steps;
   resultTimeEl.textContent = formatElapsed(elapsedMs);
   resultDetailEl.textContent = getResultDetail(achieved, hallOfFameResult);
+  resultDetailEl.classList.toggle("is-featured", isHallOfFameResult);
   resultStartButton.textContent = "Return";
-  resultActionsEl.classList.toggle("is-single", !isChallengeResult);
+  resultStartButton.hidden = achieved;
+  resultActionsEl.classList.toggle("is-single", !isChallengeResult && !achieved);
   resultActionsEl.classList.toggle("is-pair", isChallengeResult);
   resultAchievementsButton.hidden = !isChallengeResult;
   resultCloseButton.hidden = true;
@@ -585,7 +606,7 @@ function showResult(steps, elapsedMs, achieved, hallOfFameResult = null) {
 
 function getResultTitle(achieved, hallOfFameResult) {
   if (hallOfFameResult?.qualified) {
-    return `Hall of Fame! #${hallOfFameResult.rank}`;
+    return "You've Reached the Hall of Fame!!";
   }
 
   if (hallOfFameResult) {
@@ -597,7 +618,7 @@ function getResultTitle(achieved, hallOfFameResult) {
 
 function getResultDetail(achieved, hallOfFameResult) {
   if (hallOfFameResult?.qualified) {
-    return "";
+    return `You are #${hallOfFameResult.rank} of ${hallOfFameResult.total}`;
   }
 
   if (hallOfFameResult) {
@@ -652,14 +673,14 @@ async function handleSigilRefresh(event) {
   stopSigilMessage();
   disarmSigilMessages();
   sigilRefreshButton.disabled = true;
-  sigilRefreshButton.textContent = "Looking...";
+  sigilRefreshButton.textContent = "Retrieving...";
 
   try {
     await loadAvailableSigilMessages();
     selectRandomSigilMessages();
   } finally {
     sigilRefreshButton.disabled = false;
-    sigilRefreshButton.textContent = "Look for New Messages";
+    sigilRefreshButton.textContent = "Retrieve New Prophecies";
     armSigilMessages();
   }
 }
@@ -820,6 +841,14 @@ function hideAdvancedPage() {
 }
 
 function saveAchievement(steps, elapsedMs, achieved) {
+  if (steps <= 0) {
+    return {
+      qualified: false,
+      rank: null,
+      total: loadAchievements().length,
+    };
+  }
+
   const achievements = loadAchievements();
   const record = {
     achieved,
@@ -842,6 +871,7 @@ function saveAchievement(steps, elapsedMs, achieved) {
   return {
     qualified: rankIndex !== -1,
     rank: rankIndex === -1 ? null : rankIndex + 1,
+    total: saved.length,
   };
 }
 
@@ -1004,31 +1034,57 @@ function syncLearningDisplay() {
 function updateStartButton() {
   startButton.textContent = state.gameActive && state.lastStartMode === "ritual"
     ? "Restart Ritual"
-    : "Start Ritual to Access Recorded Messages";
+    : "Start Ritual to Access Recorded Prophecies";
   hallOfFameChallengeButton.textContent = state.gameActive && state.lastStartMode === "challenge"
     ? "Restart Hall of Fame Challenge"
     : "Start Hall of Fame Challenge";
 }
 
+function updateInGameControls() {
+  const active = state.gameActive;
+  const isChallenge = active && state.lastStartMode === "challenge";
+  preGameStart.hidden = active;
+  preGameHof.hidden = active;
+  inGameControls.hidden = !active;
+  restartRitualButton.hidden = isChallenge;
+  inGameControls.classList.toggle("is-challenge", isChallenge);
+  const inPlay = active && state.sequence.length > 0;
+  ritualProgressEl.hidden = !inPlay;
+  if (inPlay) {
+    const completed = state.completedRounds;
+    const goal = state.activeSequenceGoal;
+    ritualProgressEl.textContent = state.lastStartMode === "challenge"
+      ? `${completed} Steps Completed`
+      : `${completed} of ${goal} Ritual Steps are Complete`;
+  }
+}
+
 function requestMainKioskOnStartup() {
-  const request = () => {
-    if (advancedPage.hidden && resultOverlay.hidden && achievementsPage.hidden) {
-      enterKioskMode();
-    }
+  const request = () => enterKioskMode();
+  const scheduleRequests = () => {
+    [100, 500, 1500].forEach((delay) => setTimeout(request, delay));
   };
 
   if (document.readyState === "complete") {
-    setTimeout(request, 100);
-    return;
+    scheduleRequests();
+  } else {
+    window.addEventListener("load", scheduleRequests, { once: true });
   }
 
-  window.addEventListener("load", () => setTimeout(request, 100), { once: true });
+  window.addEventListener("pageshow", request);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      request();
+    }
+  });
+
+  ["pointerdown", "click", "keydown", "touchstart"].forEach((eventName) => {
+    window.addEventListener(eventName, requestMainKioskOnce, { capture: true });
+  });
 }
 
 function requestMainKioskOnce() {
-  if (advancedPage.hidden && resultOverlay.hidden && achievementsPage.hidden) {
-    enterKioskMode();
-  }
+  enterKioskMode();
 }
 
 async function enterKioskMode() {
@@ -1097,6 +1153,7 @@ function createCountdownOverlay(mode) {
   const message = document.createElement("span");
   message.className = "countdown-message";
   const title = document.createElement("span");
+  title.className = "countdown-title";
   title.textContent = "Match the Sequence";
   message.append(title);
 
