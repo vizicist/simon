@@ -68,7 +68,7 @@ if (-not (Test-Server)) {
 
 $browser = Get-BrowserCommand
 if ($browser) {
-  Start-Process -FilePath $browser -ArgumentList @("--new-window", "--start-fullscreen", $url)
+  Start-Process -FilePath $browser -ArgumentList @("--new-window", "--kiosk", $url)
 } else {
   Start-Process $url
 }
