@@ -452,6 +452,7 @@ async function playSequence(runId) {
   learnButton.disabled = true;
 
   await wait(playback.introDelay);
+  await waitForPaint();
   for (const pad of state.sequence) {
     if (runId !== state.runId) {
       return;
@@ -459,6 +460,11 @@ async function playSequence(runId) {
 
     const stepDurationMs = getSequenceStepDurationMs();
     flashPad(pad, 96, stepDurationMs);
+    await waitForPaint();
+    if (runId !== state.runId) {
+      return;
+    }
+
     playMechanicalSound(pad, 96);
     await wait(stepDurationMs);
   }
@@ -482,9 +488,14 @@ async function runStartCountdown(runId, mode) {
   }
 
   countdownOverlay.remove();
+  await waitForPaint();
 }
 
 function handlePad(padIndex, velocity = 96) {
+  if (!state.gameActive) {
+    return;
+  }
+
   if (state.playingBack) {
     return;
   }
@@ -1043,6 +1054,7 @@ function updateStartButton() {
 function updateInGameControls() {
   const active = state.gameActive;
   const isChallenge = active && state.lastStartMode === "challenge";
+  boardEl.classList.toggle("is-active", active);
   preGameStart.hidden = active;
   preGameHof.hidden = active;
   inGameControls.hidden = !active;
@@ -1206,9 +1218,18 @@ function isValidPadNotes(notes) {
 
 function flashPad(index, velocity = 96, duration = 1000) {
   const pad = pads[index];
+  if (pad.flashTimer) {
+    window.clearTimeout(pad.flashTimer);
+  }
+
   pad.style.setProperty("--hit", velocity / 127);
+  pad.classList.remove("active");
+  void pad.offsetWidth;
   pad.classList.add("active");
-  window.setTimeout(() => pad.classList.remove("active"), duration);
+  pad.flashTimer = window.setTimeout(() => {
+    pad.classList.remove("active");
+    pad.flashTimer = null;
+  }, duration);
 }
 
 function missPad(index) {
@@ -1308,6 +1329,14 @@ function playMechanicalSound(index, velocity = 96) {
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function waitForPaint() {
+  return new Promise((resolve) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(resolve);
+    });
+  });
 }
 
 function cancelPendingRound() {

@@ -47,7 +47,6 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  overflow-x: clip;
 }
 
 body {
@@ -68,8 +67,7 @@ select {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: clamp(12px, 3vh, 28px);
-  overflow: hidden;
+  padding: clamp(12px, 2vh, 22px);
   overflow-x: clip;
 }
 
@@ -79,7 +77,8 @@ select {
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-rows: 1fr auto auto 1fr auto;
+  grid-template-rows: auto minmax(260px, 1fr) auto auto;
+  gap: clamp(14px, 2vh, 24px);
   align-items: center;
   justify-items: center;
 }
@@ -89,7 +88,7 @@ select {
 }
 
 #in-game-controls {
-  grid-row: 5;
+  grid-row: 4;
 }
 
 #pre-game-start {
@@ -99,7 +98,7 @@ select {
 }
 
 #pre-game-hof {
-  grid-row: 5;
+  grid-row: 4;
 }
 
 .advanced-hotspot {
@@ -121,7 +120,6 @@ select {
   min-width: 0;
   display: grid;
   justify-items: center;
-  margin-bottom: clamp(18px, 3vh, 42px);
   text-align: center;
 }
 
@@ -137,11 +135,11 @@ h1 {
   font-weight: 400;
   max-width: min(100%, calc(100dvw - 48px));
   overflow: hidden;
-  font-size: clamp(2.2rem, 6.6vw, 5.1rem);
+  font-size: clamp(2rem, 4.8vw, 4.5rem);
   line-height: 0.95;
   text-align: center;
   text-overflow: clip;
-  white-space: nowrap;
+  text-wrap: balance;
   word-spacing: 0.14em;
 }
 
@@ -165,12 +163,12 @@ p {
 .board {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(2, minmax(130px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  width: min(100%, 720px, calc(100dvh - 520px));
+  width: clamp(450px, min(54dvw, 66dvh), 930px);
   aspect-ratio: 1;
-  margin: clamp(24px, 5vh, 60px) auto 0;
-  padding: clamp(54px, 8.5vw, 84px);
+  margin: 0 auto;
+  padding: clamp(38px, 5.6vw, 74px);
   background: #111215;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 50%;
@@ -183,7 +181,7 @@ p {
 .board::before {
   content: "";
   position: absolute;
-  inset: clamp(54px, 8.5vw, 84px);
+  inset: clamp(38px, 5.6vw, 74px);
   z-index: 0;
   border-radius: 50%;
   background:
@@ -213,10 +211,10 @@ p {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: clamp(18px, 4vw, 34px);
+  padding: clamp(12px, 2.6vw, 28px);
   border: 0;
   color: #15120e;
-  cursor: pointer;
+  cursor: default;
   overflow: hidden;
   background:
     radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.3), transparent 44%),
@@ -234,8 +232,15 @@ p {
   pointer-events: none;
 }
 
-.pad:hover,
-.pad:focus-visible {
+.board.is-active .pad,
+.board.is-learning .pad {
+  cursor: pointer;
+}
+
+.board.is-active .pad:hover,
+.board.is-active .pad:focus-visible,
+.board.is-learning .pad:hover,
+.board.is-learning .pad:focus-visible {
   filter: brightness(1.08);
   outline: 3px solid rgba(255, 255, 255, 0.44);
   outline-offset: -7px;
@@ -335,7 +340,7 @@ p {
 
 .controls {
   width: min(1120px, 100%);
-  margin: clamp(20px, 4.5vh, 60px) auto 0;
+  margin: 0 auto;
 }
 
 .midi-panel {
@@ -365,11 +370,11 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.18em;
+  gap: 0.28em;
   color: var(--text);
-  font-size: clamp(2.2rem, 8vw, 7rem);
+  font-size: clamp(2.7rem, 4.8vw, 5.6rem);
   font-weight: 700;
-  line-height: 0.95;
+  line-height: 1.02;
   text-align: center;
   text-wrap: balance;
   transform: translateY(-50%);
@@ -379,17 +384,19 @@ p {
   display: block;
   width: 100%;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
+  text-wrap: balance;
 }
 
 .countdown-detail {
   display: block;
   width: 100%;
-  font-size: clamp(2.2rem, 6vw, 4.8rem);
+  font-size: clamp(1.9rem, 2.9vw, 3rem);
   font-weight: 400;
-  line-height: 1.05;
+  line-height: 1.14;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
+  text-wrap: balance;
 }
 
 .countdown-beat {
@@ -426,15 +433,16 @@ p {
 #start,
 #hall-of-fame-challenge,
 #show-hall-of-fame {
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 #start {
   justify-self: center;
   width: 100%;
   overflow: hidden;
-  font-size: clamp(2rem, 2.35vw, 3rem);
-  min-height: 106px;
+  font-size: clamp(1.35rem, 2.15vw, 2.55rem);
+  min-height: clamp(76px, 10vh, 106px);
   text-align: center;
 }
 
@@ -480,10 +488,10 @@ p {
   grid-column: 1 / -1;
   margin: 0 0 clamp(8px, 1.6vh, 18px);
   color: var(--text);
-  font-size: clamp(1.6rem, 3.35vw, 2.55rem);
+  font-size: clamp(1.05rem, 2vw, 1.6rem);
   font-weight: 700;
-  line-height: 1.1;
-  white-space: nowrap;
+  line-height: 1.16;
+  text-wrap: balance;
 }
 
 .ritual-progress[hidden] {
@@ -493,10 +501,10 @@ p {
 
 #restart-ritual,
 #return-ritual {
-  width: min(683px, 100%);
-  min-height: 95px;
-  padding: 18px 28px;
-  font-size: clamp(2.06rem, 3.68vw, 2.71rem);
+  width: min(420px, 100%);
+  min-height: 62px;
+  padding: 12px 20px;
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
 }
 
 #restart-ritual {
@@ -562,7 +570,7 @@ p {
   z-index: 10;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: clamp(12px, 2vh, 24px);
   background: rgba(8, 9, 11, 0.76);
   backdrop-filter: blur(8px);
 }
@@ -616,13 +624,16 @@ p {
 .achievements-panel {
   position: relative;
   z-index: 1;
-  width: min(760px, 100%);
-  padding: clamp(24px, 5vw, 44px);
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: clamp(18px, 3vh, 30px);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
   background: #181b21;
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
   text-align: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .achievements-panel {
@@ -657,7 +668,7 @@ p {
 }
 
 #result-title {
-  font-size: clamp(1.35rem, 5vw, 3.6rem);
+  font-size: clamp(1.45rem, 4.2vw, 3rem);
   line-height: 1.04;
   max-width: 100%;
   overflow-wrap: break-word;
@@ -668,12 +679,12 @@ p {
 .result-stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin: clamp(18px, 3vw, 28px) 0 18px;
+  gap: 10px;
+  margin: clamp(12px, 2vh, 18px) 0 clamp(10px, 2vh, 16px);
 }
 
 .result-stats span {
-  padding: 16px;
+  padding: clamp(10px, 2vh, 14px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
@@ -684,9 +695,9 @@ p {
 
 .result-stats strong {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   color: var(--text);
-  font-size: clamp(2.8rem, 9vw, 5.4rem);
+  font-size: clamp(2rem, 5vw, 3.8rem);
   line-height: 0.95;
 }
 
@@ -704,7 +715,7 @@ p {
 }
 
 .sigil-message-panel {
-  margin-top: 22px;
+  margin-top: clamp(12px, 2vh, 18px);
 }
 
 .sigil-message-panel[hidden] {
@@ -712,17 +723,19 @@ p {
 }
 
 .sigil-message-panel h3 {
-  margin: 0 0 14px;
+  margin: 0 0 12px;
   color: var(--text);
-  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-size: clamp(1.15rem, 2.5vw, 1.65rem);
   line-height: 1.08;
   text-wrap: balance;
 }
 
 .sigil-message-actions {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
+  max-width: 560px;
+  margin: 0 auto;
 }
 
 .sigil-message-button {
@@ -752,12 +765,13 @@ p {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  margin-top: 12px;
+  max-width: 560px;
+  margin: 12px auto 0;
 }
 
 .sigil-refresh-button {
   width: 100%;
-  min-height: 54px;
+  min-height: 48px;
   padding: 10px 16px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
@@ -765,7 +779,7 @@ p {
   color: var(--text);
   cursor: pointer;
   font: inherit;
-  font-size: clamp(1.08rem, 2vw, 1.4rem);
+  font-size: clamp(0.98rem, 1.65vw, 1.18rem);
   font-weight: 700;
   line-height: 1.08;
 }
@@ -785,7 +799,7 @@ p {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
 .result-actions.is-single {
@@ -803,14 +817,14 @@ p {
 }
 
 .result-actions button {
-  min-height: 58px;
+  min-height: 48px;
   padding: 10px 16px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
   background: var(--panel-2);
   color: var(--text);
   cursor: pointer;
-  font-size: clamp(1.18rem, 2.1vw, 1.5rem);
+  font-size: clamp(1rem, 1.7vw, 1.25rem);
   font-weight: 700;
   line-height: 1.08;
 }
@@ -954,7 +968,7 @@ select {
 
 @media (max-width: 700px) {
   .app {
-    padding: 16px;
+    padding: 12px 16px;
   }
 
   h1 {
@@ -969,10 +983,49 @@ select {
 
   .board {
     border-radius: 18px;
+    width: clamp(300px, min(88vw, 58dvh), 450px);
+    padding: clamp(28px, 8vw, 42px);
+  }
+
+  .board::before {
+    inset: clamp(28px, 8vw, 42px);
   }
 
   .controls {
     grid-template-columns: 1fr;
+    row-gap: 12px;
+  }
+
+  #start {
+    min-height: 66px;
+    font-size: clamp(1.12rem, 5vw, 1.35rem);
+  }
+
+  #hall-of-fame-challenge,
+  #show-hall-of-fame {
+    justify-self: center;
+    min-height: 48px;
+    font-size: clamp(0.92rem, 4vw, 1.08rem);
+  }
+
+  .countdown-message {
+    font-size: clamp(2.4rem, 12.4vw, 3.5rem);
+    padding-inline: 18px;
+  }
+
+  .countdown-detail {
+    font-size: clamp(1.76rem, 7.2vw, 2.1rem);
+  }
+
+  .ritual-progress {
+    font-size: clamp(0.95rem, 4.4vw, 1.12rem);
+  }
+
+  #restart-ritual,
+  #return-ritual {
+    justify-self: center;
+    min-height: 50px;
+    font-size: clamp(1rem, 4.5vw, 1.18rem);
   }
 
   .midi-panel,

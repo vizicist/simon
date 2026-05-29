@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $appDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $port = 5173
 $hostName = "127.0.0.1"
-$url = "http://$hostName`:$port/"
+$url = "http://$hostName`:$port/?v=97"
 $pidFile = Join-Path $appDir ".bop-pad-simon-server.pid"
 
 function Test-Server {
@@ -24,7 +24,7 @@ function Test-Server {
 }
 
 function Get-BrowserCommand {
-  foreach ($name in @("msedge", "chrome")) {
+  foreach ($name in @("chrome")) {
     $command = Get-Command $name -ErrorAction SilentlyContinue
     if ($command) {
       return $command.Source
@@ -32,8 +32,6 @@ function Get-BrowserCommand {
   }
 
   foreach ($path in @(
-    "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
-    "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
     "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
     "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
   )) {
@@ -45,10 +43,37 @@ function Get-BrowserCommand {
   return $null
 }
 
+function Get-PythonCommand {
+  $candidates = @(
+    "py",
+    "python3",
+    "python",
+    (Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe")
+  )
+
+  foreach ($candidate in $candidates) {
+    try {
+      $command = Get-Command $candidate -ErrorAction SilentlyContinue
+      if (-not $command) {
+        continue
+      }
+
+      $output = & $command.Source --version 2>&1
+      if ($LASTEXITCODE -eq 0 -and "$output" -match "Python \d+\.\d+") {
+        return $command.Source
+      }
+    } catch {
+      continue
+    }
+  }
+
+  throw "Python is required to start Bop Pad Simon. Install Python from https://www.python.org/downloads/ or add a working python.exe to PATH."
+}
+
 if (-not (Test-Server)) {
-  $python = Get-Command python -ErrorAction Stop
+  $python = Get-PythonCommand
   $server = Start-Process `
-    -FilePath $python.Source `
+    -FilePath $python `
     -ArgumentList @("-m", "http.server", "$port", "--bind", "$hostName") `
     -WorkingDirectory $appDir `
     -WindowStyle Hidden `
