@@ -1,4 +1,8 @@
 .bop-pad-simon-server.pid
+.bop-pad-simon-browser.pid
+.chrome-kiosk-profile/
+.hall-of-fame-records.json
+__pycache__/
 *~
 *.swp
 *.mp3

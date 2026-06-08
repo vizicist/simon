@@ -1,10 +1,46 @@
 $ErrorActionPreference = "Stop"
 
 $appDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$port = 5173
+$port = 80
 $hostName = "127.0.0.1"
-$url = "http://$hostName`:$port/?v=97"
+$url = "http://$hostName/?v=97"
 $pidFile = Join-Path $appDir ".bop-pad-simon-server.pid"
+$browserPidFile = Join-Path $appDir ".bop-pad-simon-browser.pid"
+$browserProfileDir = Join-Path $appDir ".chrome-kiosk-profile"
+
+function Stop-PreviousServer {
+  if (-not (Test-Path -LiteralPath $pidFile)) {
+    return
+  }
+
+  $serverPid = Get-Content -LiteralPath $pidFile | Select-Object -First 1
+  if ($serverPid) {
+    try {
+      Stop-Process -Id ([int]$serverPid) -Force -ErrorAction Stop
+    } catch {
+      # The previous server may already be gone.
+    }
+  }
+
+  Remove-Item -LiteralPath $pidFile -Force
+}
+
+function Stop-PreviousBrowser {
+  if (-not (Test-Path -LiteralPath $browserPidFile)) {
+    return
+  }
+
+  $browserPid = Get-Content -LiteralPath $browserPidFile | Select-Object -First 1
+  if ($browserPid) {
+    try {
+      Stop-Process -Id ([int]$browserPid) -Force -ErrorAction Stop
+    } catch {
+      # The previous kiosk browser may already be gone.
+    }
+  }
+
+  Remove-Item -LiteralPath $browserPidFile -Force
+}
 
 function Test-Server {
   try {
@@ -70,11 +106,14 @@ function Get-PythonCommand {
   throw "Python is required to start Bop Pad Simon. Install Python from https://www.python.org/downloads/ or add a working python.exe to PATH."
 }
 
+Stop-PreviousServer
+Stop-PreviousBrowser
+
 if (-not (Test-Server)) {
   $python = Get-PythonCommand
   $server = Start-Process `
     -FilePath $python `
-    -ArgumentList @("-m", "http.server", "$port", "--bind", "$hostName") `
+    -ArgumentList @("bop_pad_simon_server.py") `
     -WorkingDirectory $appDir `
     -WindowStyle Hidden `
     -PassThru
@@ -93,7 +132,13 @@ if (-not (Test-Server)) {
 
 $browser = Get-BrowserCommand
 if ($browser) {
-  Start-Process -FilePath $browser -ArgumentList @("--new-window", "--kiosk", $url)
+  $browserProfileArg = "--user-data-dir=`"$browserProfileDir`""
+  $browserProcess = Start-Process `
+    -FilePath $browser `
+    -ArgumentList @("--new-window", "--kiosk", $browserProfileArg, $url) `
+    -PassThru
+
+  Set-Content -LiteralPath $browserPidFile -Value $browserProcess.Id
 } else {
   Start-Process $url
 }

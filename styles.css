@@ -92,13 +92,16 @@ select {
 }
 
 #pre-game-start {
-  width: min(84dvw, 100%);
+  width: min(84dvw, 560px);
   grid-template-columns: minmax(0, 1fr);
   justify-content: center;
 }
 
 #pre-game-hof {
   grid-row: 4;
+  width: min(84dvw, 560px);
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: center;
 }
 
 .advanced-hotspot {
@@ -153,6 +156,7 @@ p {
 .timing-panel,
 .countdown-panel,
 .message-volume-panel,
+.tone-volume-panel,
 .controls button,
 .advanced-actions button,
 .advanced-return {
@@ -165,7 +169,7 @@ p {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  width: clamp(450px, min(54dvw, 66dvh), 930px);
+  width: clamp(340px, min(42dvw, 49dvh), 620px);
   aspect-ratio: 1;
   margin: 0 auto;
   padding: clamp(38px, 5.6vw, 74px);
@@ -176,6 +180,10 @@ p {
     0 34px 80px rgba(0, 0, 0, 0.48),
     inset 0 0 0 2px rgba(255, 255, 255, 0.05),
     inset 0 -18px 42px rgba(0, 0, 0, 0.42);
+}
+
+.board.is-active {
+  width: clamp(450px, min(54dvw, 66dvh), 930px);
 }
 
 .board::before {
@@ -430,37 +438,31 @@ p {
   line-height: 1.08;
 }
 
-#start,
 #hall-of-fame-challenge,
+#recorded-transmissions,
 #show-hall-of-fame {
   overflow-wrap: anywhere;
   text-wrap: balance;
 }
 
-#start {
+#hall-of-fame-challenge {
   justify-self: center;
   width: 100%;
   overflow: hidden;
-  font-size: clamp(1.35rem, 2.15vw, 2.55rem);
-  min-height: clamp(76px, 10vh, 106px);
+  font-size: clamp(1rem, 1.72vw, 1.42rem);
+  min-height: clamp(70px, 8.4vh, 86px);
   text-align: center;
 }
 
-#hall-of-fame-challenge,
+#recorded-transmissions,
 #show-hall-of-fame {
-  width: min(390px, 100%);
-  min-height: 50px;
-  padding: 8px 14px;
-  font-size: clamp(1rem, 1.62vw, 1.28rem);
-  font-weight: 400;
-}
-
-#hall-of-fame-challenge {
-  justify-self: end;
-}
-
-#show-hall-of-fame {
-  justify-self: start;
+  justify-self: center;
+  width: 100%;
+  min-height: clamp(70px, 8.4vh, 86px);
+  padding: 10px 16px;
+  font-size: clamp(1rem, 1.72vw, 1.42rem);
+  font-weight: 700;
+  text-align: center;
 }
 
 .controls button:hover,
@@ -564,7 +566,8 @@ p {
 }
 
 .result-overlay,
-.achievements-page {
+.achievements-page,
+.transmissions-page {
   position: fixed;
   inset: 0;
   z-index: 10;
@@ -576,7 +579,8 @@ p {
 }
 
 .result-overlay[hidden],
-.achievements-page[hidden] {
+.achievements-page[hidden],
+.transmissions-page[hidden] {
   display: none;
 }
 
@@ -621,7 +625,8 @@ p {
 }
 
 .result-dialog,
-.achievements-panel {
+.achievements-panel,
+.transmissions-panel {
   position: relative;
   z-index: 1;
   width: min(760px, calc(100vw - 32px));
@@ -636,13 +641,18 @@ p {
   overscroll-behavior: contain;
 }
 
-.achievements-panel {
+.achievements-panel,
+.transmissions-panel {
   display: flex;
   flex-direction: column;
   max-height: calc(100dvh - 48px);
   overflow: hidden;
   overscroll-behavior: contain;
   padding-block: clamp(18px, 3vh, 28px);
+}
+
+.transmissions-panel {
+  width: min(980px, calc(100vw - 32px));
 }
 
 .result-kicker {
@@ -653,7 +663,8 @@ p {
 }
 
 .result-dialog h2,
-.achievements-panel h2 {
+.achievements-panel h2,
+.transmissions-panel h2 {
   margin: 0;
   font-size: clamp(2.6rem, 9vw, 5.8rem);
   line-height: 0.92;
@@ -661,10 +672,34 @@ p {
   text-wrap: balance;
 }
 
-.achievements-panel h2 {
+.achievements-panel h2,
+.transmissions-panel h2 {
   font-size: clamp(1.7rem, 5.2vw, 3.4rem);
   font-weight: 400;
   line-height: 0.98;
+}
+
+.transmissions-panel h2 {
+  padding: clamp(12px, 2.5vh, 24px) clamp(8px, 2vw, 18px) clamp(14px, 3vh, 28px);
+}
+
+.sigil-message-actions.transmissions-actions {
+  width: min(850px, 100%);
+  max-width: 850px;
+  gap: clamp(12px, 2vw, 18px);
+  margin-top: clamp(14px, 3vh, 28px);
+}
+
+.transmissions-actions .sigil-message-button {
+  padding: clamp(14px, 2.6vw, 26px);
+}
+
+.transmissions-footer {
+  width: min(420px, 100%);
+  max-width: 420px;
+  grid-template-columns: 1fr;
+  justify-content: center;
+  margin: clamp(16px, 3vh, 24px) auto 0;
 }
 
 #result-title {
@@ -769,6 +804,13 @@ p {
   margin: 12px auto 0;
 }
 
+.sigil-footer.transmissions-footer {
+  grid-template-columns: 1fr;
+  width: min(420px, 100%);
+  max-width: 420px;
+  margin: clamp(16px, 3vh, 24px) auto 0;
+}
+
 .sigil-refresh-button {
   width: 100%;
   min-height: 48px;
@@ -862,11 +904,23 @@ p {
   font-weight: 400;
 }
 
+.achievement-content {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
 .achievement-result {
   color: var(--text);
   font-size: clamp(1.15rem, 3.2vw, 2rem);
   font-weight: 700;
   line-height: 1;
+}
+
+.achievement-date {
+  color: var(--muted);
+  font-size: clamp(0.76rem, 1.6vw, 0.98rem);
+  line-height: 1.1;
 }
 
 .achievement-empty {
@@ -908,7 +962,9 @@ p {
 }
 
 .timing-panel,
-.message-volume-panel {
+.response-timeout-panel,
+.message-volume-panel,
+.tone-volume-panel {
   display: grid;
   grid-template-columns: auto minmax(180px, 1fr) auto;
   gap: 12px;
@@ -983,8 +1039,12 @@ select {
 
   .board {
     border-radius: 18px;
-    width: clamp(300px, min(88vw, 58dvh), 450px);
+    width: clamp(250px, min(72vw, 42dvh), 360px);
     padding: clamp(28px, 8vw, 42px);
+  }
+
+  .board.is-active {
+    width: clamp(300px, min(88vw, 58dvh), 450px);
   }
 
   .board::before {
@@ -996,15 +1056,11 @@ select {
     row-gap: 12px;
   }
 
-  #start {
-    min-height: 66px;
-    font-size: clamp(1.12rem, 5vw, 1.35rem);
-  }
-
   #hall-of-fame-challenge,
+  #recorded-transmissions,
   #show-hall-of-fame {
     justify-self: center;
-    min-height: 48px;
+    min-height: 64px;
     font-size: clamp(0.92rem, 4vw, 1.08rem);
   }
 
@@ -1031,8 +1087,10 @@ select {
   .midi-panel,
   .goal-panel,
   .timing-panel,
+  .response-timeout-panel,
   .countdown-panel,
   .message-volume-panel,
+  .tone-volume-panel,
   .advanced-actions {
     grid-template-columns: 1fr;
   }

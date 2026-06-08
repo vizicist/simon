@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Prophecy Access Ritual</title>
+    <title>Sigil Sequencing Ritual</title>
     <link rel="stylesheet" href="styles.css?v=97">
   </head>
   <body>
@@ -13,7 +13,7 @@
       <section class="stage">
         <div class="status-bar">
           <div>
-            <h1 id="title">Prophecy Access Ritual</h1>
+            <h1 id="title">Sigil Sequencing Ritual</h1>
             <p id="subtitle"></p>
           </div>
         </div>
@@ -38,7 +38,7 @@
         </div>
 
         <div class="controls" id="pre-game-start" aria-label="Game start">
-          <button id="start" type="button">Start Ritual to Access Recorded Prophecies</button>
+          <button id="hall-of-fame-challenge" type="button">Start New Ritual</button>
         </div>
 
         <div class="controls in-game-controls" id="in-game-controls" aria-label="Ritual progress" hidden>
@@ -48,8 +48,8 @@
         </div>
 
         <div class="controls" id="pre-game-hof" aria-label="Hall of Fame controls">
-          <button id="hall-of-fame-challenge" type="button">Start Hall of Fame Challenge</button>
           <button id="show-hall-of-fame" type="button">Show Hall of Fame</button>
+          <button id="recorded-transmissions" type="button">Access Transmissions and Prophecies</button>
         </div>
       </section>
 
@@ -95,6 +95,11 @@
             <input id="sequence-timing" type="range" min="0.25" max="1" step="0.05" value="1">
             <output id="sequence-timing-value" for="sequence-timing">1.00s</output>
           </div>
+          <div class="response-timeout-panel">
+            <label for="response-timeout">Response Timeout</label>
+            <input id="response-timeout" type="range" min="2" max="15" step="0.5" value="6">
+            <output id="response-timeout-value" for="response-timeout">6.0s</output>
+          </div>
           <div class="countdown-panel">
             <label for="start-countdown">Start Countdown</label>
             <select id="start-countdown">
@@ -112,6 +117,12 @@
             <input id="message-volume" type="range" min="0" max="1" step="0.05" value="1">
             <output id="message-volume-value" for="message-volume">100%</output>
           </div>
+          <div class="tone-volume-panel">
+            <label for="tone-volume">Tone Volume</label>
+            <input id="tone-volume" type="range" min="0" max="1" step="0.05" value="1">
+            <output id="tone-volume-value" for="tone-volume">100%</output>
+          </div>
+          <button class="advanced-return" id="quit-kiosk" type="button">Quit Kiosk Mode</button>
           <button class="advanced-return" id="advanced-return" type="button">Return to Main Page</button>
         </div>
       </section>
@@ -161,11 +172,34 @@
 
       <section class="achievements-page" id="achievements-page" aria-labelledby="achievements-title" aria-modal="true" role="dialog" hidden>
         <div class="achievements-panel">
-          <h2 id="achievements-title">Prophecy Sequence Hall of Fame</h2>
+          <h2 id="achievements-title">Sigil Sequencing Hall of Fame</h2>
           <ol class="achievement-list" id="achievement-list"></ol>
           <p class="achievement-empty" id="achievement-empty">Complete a run to begin the record.</p>
           <div class="result-actions">
             <button id="achievements-close" type="button">Return</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="transmissions-page" id="transmissions-page" aria-labelledby="transmissions-title" aria-modal="true" role="dialog" hidden>
+        <div class="transmissions-panel">
+          <h2 id="transmissions-title">Transmissions and Prophecies</h2>
+          <div class="sigil-message-actions transmissions-actions" aria-label="Recorded transmission sigils">
+            <button class="sigil-message-button transmission-sigil-button" type="button" data-sigil="chaos" aria-label="Play Chaos transmissions">
+              <img src="assets/shapes/chaos.svg" alt="">
+            </button>
+            <button class="sigil-message-button transmission-sigil-button" type="button" data-sigil="oracle" aria-label="Play Oracle prophecies">
+              <img src="assets/shapes/oracle.svg" alt="">
+            </button>
+            <button class="sigil-message-button transmission-sigil-button" type="button" data-sigil="directive" aria-label="Play Directive transmissions">
+              <img src="assets/shapes/directive.svg" alt="">
+            </button>
+            <button class="sigil-message-button transmission-sigil-button" type="button" data-sigil="sacred" aria-label="Play Sacred prophecies">
+              <img src="assets/shapes/sacred.svg" alt="">
+            </button>
+          </div>
+          <div class="sigil-footer transmissions-footer">
+            <button class="sigil-refresh-button" id="transmissions-close" type="button">Return</button>
           </div>
         </div>
       </section>

@@ -1,1 +1,3 @@
-copy "simon_onboot.bat" "%USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
+@echo off
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Setup-BopPadSimonShortcuts.ps1"
+exit /b %ERRORLEVEL%

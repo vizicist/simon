@@ -4,8 +4,8 @@ const bestEl = document.querySelector("#best");
 const subtitleEl = document.querySelector("#subtitle");
 const connectButton = document.querySelector("#connect");
 const learnButton = document.querySelector("#learn");
-const startButton = document.querySelector("#start");
 const hallOfFameChallengeButton = document.querySelector("#hall-of-fame-challenge");
+const recordedTransmissionsButton = document.querySelector("#recorded-transmissions");
 const showHallOfFameButton = document.querySelector("#show-hall-of-fame");
 const preGameStart = document.querySelector("#pre-game-start");
 const preGameHof = document.querySelector("#pre-game-hof");
@@ -20,9 +20,13 @@ const inputSelect = document.querySelector("#midi-input");
 const sequenceGoalSelect = document.querySelector("#sequence-goal");
 const sequenceTimingInput = document.querySelector("#sequence-timing");
 const sequenceTimingValue = document.querySelector("#sequence-timing-value");
+const responseTimeoutInput = document.querySelector("#response-timeout");
+const responseTimeoutValue = document.querySelector("#response-timeout-value");
 const startCountdownSelect = document.querySelector("#start-countdown");
 const messageVolumeInput = document.querySelector("#message-volume");
 const messageVolumeValue = document.querySelector("#message-volume-value");
+const toneVolumeInput = document.querySelector("#tone-volume");
+const toneVolumeValue = document.querySelector("#tone-volume-value");
 const midiStateEl = document.querySelector("#midi-state");
 const resultOverlay = document.querySelector("#result-overlay");
 const resultTitleEl = document.querySelector("#result-title");
@@ -39,11 +43,14 @@ const sigilMessageButtons = Array.from(document.querySelectorAll(".sigil-message
 const sigilRefreshButton = document.querySelector("#sigil-refresh");
 const sigilReturnButton = document.querySelector("#sigil-return");
 const advancedPage = document.querySelector("#advanced-page");
+const quitKioskButton = document.querySelector("#quit-kiosk");
 const advancedReturnButton = document.querySelector("#advanced-return");
 const achievementsPage = document.querySelector("#achievements-page");
 const achievementList = document.querySelector("#achievement-list");
 const achievementEmpty = document.querySelector("#achievement-empty");
 const achievementsCloseButton = document.querySelector("#achievements-close");
+const transmissionsPage = document.querySelector("#transmissions-page");
+const transmissionsCloseButton = document.querySelector("#transmissions-close");
 
 const colors = ["green", "red", "yellow", "blue"];
 const fallbackSigilMessages = {
@@ -72,8 +79,8 @@ const playback = {
   introDelay: 700,
 };
 
-const responseTimeoutMs = 6000;
 const ritualGoalSteps = 8;
+const minimumSigilMessageDurationSeconds = 10;
 
 const advancedAccess = {
   taps: 0,
@@ -89,9 +96,14 @@ const storageKeys = {
   notes: "bop-pad-simon-notes",
   sequenceGoal: "sigil-sequence-goal",
   sequenceTiming: "sigil-sequence-timing",
+  responseTimeout: "sigil-sequence-response-timeout",
   startCountdown: "sigil-sequence-start-countdown",
   messageVolume: "sigil-sequence-message-volume",
+  toneVolume: "sigil-sequence-tone-volume",
 };
+const persistentAchievementFileName = "sigil-sequence-achievements-v3.json";
+const achievementsApiPath = "/api/achievements";
+const quitKioskApiPath = "/api/quit-kiosk";
 
 localStorage.removeItem("sigil-sequence-achievements");
 localStorage.removeItem("sigil-sequence-achievements-v2");
@@ -124,8 +136,10 @@ const state = {
   sequenceGoal: loadSequenceGoal(),
   activeSequenceGoal: ritualGoalSteps,
   sequenceTiming: loadSequenceTiming(),
+  responseTimeout: loadResponseTimeout(),
   startCountdown: loadStartCountdown(),
   messageVolume: loadMessageVolume(),
+  toneVolume: loadToneVolume(),
   recordHallOfFame: false,
   lastStartMode: "ritual",
   lastRunAchieved: false,
@@ -139,17 +153,20 @@ if (bestEl) {
 renderMappings();
 renderSequenceGoal();
 renderSequenceTiming();
+renderResponseTimeout();
 renderStartCountdown();
 renderMessageVolume();
+renderToneVolume();
 syncLearningDisplay();
+const achievementsReady = initializePersistentAchievements();
 loadAvailableSigilMessages();
 autoConnectMidi();
 requestMainKioskOnStartup();
 
 connectButton.addEventListener("click", connectMidi);
 learnButton.addEventListener("click", startLearning);
-startButton.addEventListener("click", () => startGame("ritual"));
 hallOfFameChallengeButton.addEventListener("click", () => startGame("challenge"));
+recordedTransmissionsButton.addEventListener("click", showTransmissionsPage);
 showHallOfFameButton.addEventListener("click", showAchievementsPage);
 restartRitualButton.addEventListener("click", () => startGame("ritual"));
 returnRitualButton.addEventListener("click", resetGame);
@@ -159,8 +176,10 @@ if (resetButton) {
 inputSelect.addEventListener("change", selectMidiInput);
 sequenceGoalSelect.addEventListener("change", updateSequenceGoal);
 sequenceTimingInput.addEventListener("input", updateSequenceTiming);
+responseTimeoutInput.addEventListener("input", updateResponseTimeout);
 startCountdownSelect.addEventListener("change", updateStartCountdownSetting);
 messageVolumeInput.addEventListener("input", updateMessageVolume);
+toneVolumeInput.addEventListener("input", updateToneVolume);
 resultStartButton.addEventListener("click", handleResultStart);
 resultCloseButton.addEventListener("click", hideResult);
 resultAchievementsButton.addEventListener("click", showAchievementsPage);
@@ -169,8 +188,10 @@ sigilMessageButtons.forEach((button) => {
 });
 sigilRefreshButton.addEventListener("click", handleSigilRefresh);
 sigilReturnButton.addEventListener("click", handleResultStart);
+quitKioskButton.addEventListener("click", quitKioskMode);
 advancedReturnButton.addEventListener("click", hideAdvancedPage);
-achievementsCloseButton.addEventListener("click", hideAchievementsPage);
+achievementsCloseButton.addEventListener("click", handleAchievementsReturn);
+transmissionsCloseButton.addEventListener("click", hideTransmissionsPage);
 advancedHotspot.addEventListener("click", handleAdvancedHotspot);
 
 pads.forEach((pad) => {
@@ -662,7 +683,16 @@ function disarmSigilMessages() {
 }
 
 function handleSigilMessageClick(event) {
-  if (!state.sigilMessageArmed || !event.isTrusted) {
+  if (!event.isTrusted) {
+    return;
+  }
+
+  if (event.currentTarget.classList.contains("transmission-sigil-button")) {
+    playSigilMessage(event.currentTarget.dataset.sigil);
+    return;
+  }
+
+  if (!state.sigilMessageArmed) {
     return;
   }
 
@@ -709,7 +739,8 @@ async function loadAvailableSigilMessages() {
       .map((link) => decodeURIComponent(link.getAttribute("href") || ""))
       .map((href) => href.split("?")[0].split("#")[0].split("/").pop())
       .filter((fileName) => fileName && fileName.toLowerCase().endsWith(".mp3"));
-    const discoveredMessages = groupSigilMessages(files);
+    const longEnoughFiles = await filterLongEnoughSigilMessages(files);
+    const discoveredMessages = groupSigilMessages(longEnoughFiles);
 
     Object.keys(sigilMessages).forEach((sigil) => {
       if (discoveredMessages[sigil]?.length) {
@@ -719,6 +750,46 @@ async function loadAvailableSigilMessages() {
   } catch {
     Object.assign(sigilMessages, fallbackSigilMessages);
   }
+}
+
+async function filterLongEnoughSigilMessages(fileNames) {
+  const durationChecks = fileNames.map(async (fileName) => {
+    const src = `mp3s/${encodeURIComponent(fileName)}`;
+    const duration = await readAudioDuration(src);
+    return duration >= minimumSigilMessageDurationSeconds ? fileName : null;
+  });
+
+  return (await Promise.all(durationChecks)).filter(Boolean);
+}
+
+function readAudioDuration(src) {
+  return new Promise((resolve) => {
+    const audio = new Audio();
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      resolve(0);
+    }, 5000);
+
+    function cleanup() {
+      window.clearTimeout(timeout);
+      audio.removeAttribute("src");
+      audio.load();
+      audio.onloadedmetadata = null;
+      audio.onerror = null;
+    }
+
+    audio.preload = "metadata";
+    audio.onloadedmetadata = () => {
+      const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+      cleanup();
+      resolve(duration);
+    };
+    audio.onerror = () => {
+      cleanup();
+      resolve(0);
+    };
+    audio.src = src;
+  });
 }
 
 function groupSigilMessages(fileNames) {
@@ -747,12 +818,24 @@ function selectRandomSigilMessages() {
   );
 }
 
-function chooseRandom(items) {
+function selectRandomSigilMessage(sigil) {
+  const sources = sigilMessages[sigil];
+  const previousSrc = state.selectedSigilMessages[sigil];
+  const src = chooseRandom(sources, previousSrc);
+  state.selectedSigilMessages[sigil] = src;
+  return src;
+}
+
+function chooseRandom(items, excludedItem = null) {
   if (!items?.length) {
     return null;
   }
 
-  return items[Math.floor(Math.random() * items.length)];
+  const eligibleItems = items.length > 1
+    ? items.filter((item) => item !== excludedItem)
+    : items;
+
+  return eligibleItems[Math.floor(Math.random() * eligibleItems.length)];
 }
 
 function showFireworks() {
@@ -804,7 +887,11 @@ function playSigilMessage(sigil) {
   }
 
   stopSigilMessage();
-  const src = state.selectedSigilMessages[sigil] || chooseRandom(sources);
+  const src = selectRandomSigilMessage(sigil);
+  if (!src) {
+    return;
+  }
+
   const audio = new Audio(src);
   audio.volume = state.messageVolume;
   state.activeSigilMessage = audio;
@@ -830,7 +917,8 @@ function stopSigilMessage() {
   state.activeSigilMessage = null;
 }
 
-function showAchievementsPage() {
+async function showAchievementsPage() {
+  await achievementsReady;
   renderAchievements();
   achievementsPage.hidden = false;
   enterKioskMode();
@@ -841,6 +929,39 @@ function hideAchievementsPage() {
   enterKioskMode();
 }
 
+function handleAchievementsReturn() {
+  achievementsPage.hidden = true;
+  returnToMainPage();
+}
+
+function returnToMainPage() {
+  stopSigilMessage();
+  hideResult();
+  hideAdvancedPage();
+  hideTransmissionsPage();
+  cancelPendingRound();
+  state.runId += 1;
+  state.sequence = [];
+  state.playerIndex = 0;
+  state.acceptingInput = false;
+  state.gameActive = false;
+  state.playingBack = false;
+  state.learning = false;
+  state.learnTarget = null;
+  state.recordHallOfFame = false;
+  state.activeSequenceGoal = state.sequenceGoal;
+  state.startedAt = null;
+  state.correctSteps = 0;
+  state.completedRounds = 0;
+  pads.forEach((pad) => pad.classList.remove("learn-target", "learned"));
+  learnButton.textContent = "Learn Pads";
+  syncLearningDisplay();
+  updateStartButton();
+  updateInGameControls();
+  updateRound();
+  enterKioskMode();
+}
+
 function showAdvancedPage() {
   advancedPage.hidden = false;
   enterKioskMode();
@@ -848,6 +969,20 @@ function showAdvancedPage() {
 
 function hideAdvancedPage() {
   advancedPage.hidden = true;
+  enterKioskMode();
+}
+
+function showTransmissionsPage() {
+  loadAvailableSigilMessages().finally(() => {
+    selectRandomSigilMessages();
+    transmissionsPage.hidden = false;
+    enterKioskMode();
+  });
+}
+
+function hideTransmissionsPage() {
+  stopSigilMessage();
+  transmissionsPage.hidden = true;
   enterKioskMode();
 }
 
@@ -874,10 +1009,7 @@ function saveAchievement(steps, elapsedMs, achieved) {
   const saved = sorted.slice(0, 10);
   const rankIndex = saved.indexOf(record);
 
-  localStorage.setItem(
-    storageKeys.achievements,
-    JSON.stringify(saved),
-  );
+  saveAchievements(saved);
 
   return {
     qualified: rankIndex !== -1,
@@ -910,6 +1042,17 @@ function renderSequenceTiming() {
   sequenceTimingValue.textContent = `${state.sequenceTiming.toFixed(2)}s`;
 }
 
+function updateResponseTimeout() {
+  state.responseTimeout = normalizeResponseTimeout(responseTimeoutInput.value);
+  localStorage.setItem(storageKeys.responseTimeout, String(state.responseTimeout));
+  renderResponseTimeout();
+}
+
+function renderResponseTimeout() {
+  responseTimeoutInput.value = String(state.responseTimeout);
+  responseTimeoutValue.textContent = `${state.responseTimeout.toFixed(1)}s`;
+}
+
 function updateStartCountdownSetting() {
   state.startCountdown = normalizeStartCountdown(startCountdownSelect.value);
   localStorage.setItem(storageKeys.startCountdown, String(state.startCountdown));
@@ -935,6 +1078,17 @@ function renderMessageVolume() {
   messageVolumeValue.textContent = `${Math.round(state.messageVolume * 100)}%`;
 }
 
+function updateToneVolume() {
+  state.toneVolume = normalizeVolume(toneVolumeInput.value);
+  localStorage.setItem(storageKeys.toneVolume, String(state.toneVolume));
+  renderToneVolume();
+}
+
+function renderToneVolume() {
+  toneVolumeInput.value = String(state.toneVolume);
+  toneVolumeValue.textContent = `${Math.round(state.toneVolume * 100)}%`;
+}
+
 function loadSequenceGoal() {
   return normalizeSequenceGoal(localStorage.getItem(storageKeys.sequenceGoal) || "4");
 }
@@ -943,12 +1097,20 @@ function loadSequenceTiming() {
   return normalizeSequenceTiming(localStorage.getItem(storageKeys.sequenceTiming) || "0.25");
 }
 
+function loadResponseTimeout() {
+  return normalizeResponseTimeout(localStorage.getItem(storageKeys.responseTimeout) || "6");
+}
+
 function loadStartCountdown() {
   return normalizeStartCountdown(localStorage.getItem(storageKeys.startCountdown) || "3");
 }
 
 function loadMessageVolume() {
   return normalizeMessageVolume(localStorage.getItem(storageKeys.messageVolume) || "0.2");
+}
+
+function loadToneVolume() {
+  return normalizeVolume(localStorage.getItem(storageKeys.toneVolume) || "1");
 }
 
 function normalizeSequenceGoal(value) {
@@ -968,6 +1130,24 @@ function normalizeSequenceTiming(value) {
   const numericValue = Number(value);
   if (Number.isFinite(numericValue)) {
     return Math.min(1, Math.max(0.25, Math.round(numericValue * 100) / 100));
+  }
+
+  return 1;
+}
+
+function normalizeResponseTimeout(value) {
+  const numericValue = Number(value);
+  if (Number.isFinite(numericValue)) {
+    return Math.min(15, Math.max(2, Math.round(numericValue * 2) / 2));
+  }
+
+  return 6;
+}
+
+function normalizeVolume(value) {
+  const numericValue = Number(value);
+  if (Number.isFinite(numericValue)) {
+    return Math.min(1, Math.max(0, Math.round(numericValue * 100) / 100));
   }
 
   return 1;
@@ -1011,14 +1191,32 @@ function renderAchievements() {
     result.className = "achievement-result";
     result.textContent = `${formatStepCount(achievement.steps)} in ${formatElapsedSeconds(achievement.elapsedMs)}`;
 
-    item.append(rank, result);
+    const detail = document.createElement("span");
+    detail.className = "achievement-date";
+    detail.textContent = formatAchievementDateTime(achievement.finishedAt);
+
+    const content = document.createElement("span");
+    content.className = "achievement-content";
+    content.append(result, detail);
+
+    item.append(rank, content);
     achievementList.append(item);
   });
 }
 
 function loadAchievements() {
   try {
-    const parsed = JSON.parse(localStorage.getItem(storageKeys.achievements) || "[]");
+    return parseAchievements(localStorage.getItem(storageKeys.achievements) || "[]");
+  } catch {
+    localStorage.removeItem(storageKeys.achievements);
+  }
+
+  return [];
+}
+
+function parseAchievements(value) {
+  try {
+    const parsed = JSON.parse(value || "[]");
     if (Array.isArray(parsed)) {
       return parsed.filter((achievement) => {
         return Number.isFinite(achievement.elapsedMs)
@@ -1026,10 +1224,26 @@ function loadAchievements() {
       });
     }
   } catch {
-    localStorage.removeItem(storageKeys.achievements);
+    return [];
   }
 
   return [];
+}
+
+function mergeAchievements(...achievementGroups) {
+  const unique = new Map();
+  achievementGroups.flat().forEach((achievement) => {
+    const key = [
+      achievement.finishedAt || "",
+      achievement.steps,
+      achievement.elapsedMs,
+      achievement.goal || "",
+      achievement.achieved ? "1" : "0",
+    ].join("|");
+    unique.set(key, achievement);
+  });
+
+  return sortAchievements([...unique.values()]);
 }
 
 function sortAchievements(achievements) {
@@ -1043,12 +1257,100 @@ function syncLearningDisplay() {
 }
 
 function updateStartButton() {
-  startButton.textContent = state.gameActive && state.lastStartMode === "ritual"
-    ? "Restart Ritual"
-    : "Start Ritual to Access Recorded Prophecies";
   hallOfFameChallengeButton.textContent = state.gameActive && state.lastStartMode === "challenge"
-    ? "Restart Hall of Fame Challenge"
-    : "Start Hall of Fame Challenge";
+    ? "Restart Ritual"
+    : "Start New Ritual";
+}
+
+function saveAchievements(achievements) {
+  const serialized = JSON.stringify(achievements);
+  localStorage.setItem(storageKeys.achievements, serialized);
+  writePersistentAchievements(serialized);
+  writeServerAchievements(achievements);
+}
+
+async function initializePersistentAchievements() {
+  await requestPersistentStorage();
+
+  const persistentAchievements = await readPersistentAchievements();
+  const serverAchievements = await readServerAchievements();
+  if (persistentAchievements.length || serverAchievements.length) {
+    const merged = mergeAchievements(loadAchievements(), persistentAchievements, serverAchievements);
+    saveAchievements(merged.slice(0, 10));
+  } else {
+    writePersistentAchievements(JSON.stringify(loadAchievements()));
+    writeServerAchievements(loadAchievements());
+  }
+}
+
+async function readServerAchievements() {
+  try {
+    const response = await fetch(achievementsApiPath, { cache: "no-store" });
+    if (!response.ok) {
+      return [];
+    }
+
+    return parseAchievements(await response.text());
+  } catch {
+    return [];
+  }
+}
+
+async function writeServerAchievements(achievements) {
+  try {
+    await fetch(achievementsApiPath, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(achievements),
+    });
+  } catch {
+    // localStorage and OPFS remain available when the local API is unavailable.
+  }
+}
+
+async function requestPersistentStorage() {
+  if (!navigator.storage?.persist) {
+    return;
+  }
+
+  try {
+    await navigator.storage.persist();
+  } catch {
+    // The list still stays in localStorage when persistent storage is unavailable.
+  }
+}
+
+async function readPersistentAchievements() {
+  if (!navigator.storage?.getDirectory) {
+    return [];
+  }
+
+  try {
+    const root = await navigator.storage.getDirectory();
+    const fileHandle = await root.getFileHandle(persistentAchievementFileName);
+    const file = await fileHandle.getFile();
+    return parseAchievements(await file.text());
+  } catch {
+    return [];
+  }
+}
+
+async function writePersistentAchievements(serialized) {
+  if (!navigator.storage?.getDirectory) {
+    return;
+  }
+
+  try {
+    const root = await navigator.storage.getDirectory();
+    const fileHandle = await root.getFileHandle(persistentAchievementFileName, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(serialized);
+    await writable.close();
+  } catch {
+    // localStorage remains the fallback persistence layer.
+  }
 }
 
 function updateInGameControls() {
@@ -1064,9 +1366,10 @@ function updateInGameControls() {
   ritualProgressEl.hidden = !inPlay;
   if (inPlay) {
     const completed = state.completedRounds;
+    const sequenceLength = state.sequence.length;
     const goal = state.activeSequenceGoal;
     ritualProgressEl.textContent = state.lastStartMode === "challenge"
-      ? `${completed} Steps Completed`
+      ? `Sequence Length is ${sequenceLength}`
       : `${completed} of ${goal} Ritual Steps are Complete`;
   }
 }
@@ -1121,8 +1424,34 @@ function getFullscreenElement() {
     || document.msFullscreenElement;
 }
 
+async function quitKioskMode() {
+  try {
+    const response = await fetch(quitKioskApiPath, { method: "POST", cache: "no-store" });
+    if (response.ok) {
+      const result = await response.json();
+      if (result.ok) {
+        return;
+      }
+    }
+  } catch {
+    // Static-file mode cannot quit the browser, but fullscreen can still be released.
+  }
+
+  const exitFullscreen = document.exitFullscreen
+    || document.webkitExitFullscreen
+    || document.msExitFullscreen;
+
+  if (getFullscreenElement() && exitFullscreen) {
+    try {
+      await exitFullscreen.call(document);
+    } catch {
+      // The browser may refuse fullscreen exit outside a direct gesture.
+    }
+  }
+}
+
 function handleAdvancedHotspot() {
-  if (!advancedPage.hidden || !resultOverlay.hidden || !achievementsPage.hidden) {
+  if (!advancedPage.hidden || !resultOverlay.hidden || !achievementsPage.hidden || !transmissionsPage.hidden) {
     return;
   }
 
@@ -1154,6 +1483,22 @@ function formatElapsedSeconds(ms) {
 
 function formatStepCount(steps) {
   return `${steps} ${steps === 1 ? "step" : "steps"}`;
+}
+
+function formatAchievementDateTime(value) {
+  if (!value) {
+    return "Date and time unavailable";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Date and time unavailable";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 }
 
 function createCountdownOverlay(mode) {
@@ -1256,10 +1601,15 @@ function playMechanicalSound(index, velocity = 96) {
     { notes: [392, 493.88, 587.33], pan: 0.18 },
   ];
   const voice = voices[index];
+  const toneVolume = normalizeVolume(state.toneVolume);
+  if (toneVolume <= 0) {
+    return;
+  }
+
   const now = context.currentTime;
   const durationSeconds = 0.25;
   const releaseTime = now + durationSeconds;
-  const level = 0.16 + (velocity / 127) * 0.24;
+  const level = (0.16 + (velocity / 127) * 0.24) * toneVolume;
   const master = context.createGain();
   const compressor = context.createDynamicsCompressor();
   const filter = context.createBiquadFilter();
@@ -1346,7 +1696,6 @@ function cancelPendingRound() {
   }
 
   cancelResponseTimeout();
-  startButton.disabled = false;
   learnButton.disabled = false;
 }
 
@@ -1360,7 +1709,11 @@ function startResponseTimeout(runId) {
 
     state.acceptingInput = false;
     endGame();
-  }, responseTimeoutMs);
+  }, getResponseTimeoutMs());
+}
+
+function getResponseTimeoutMs() {
+  return Math.round(state.responseTimeout * 1000);
 }
 
 function cancelResponseTimeout() {
