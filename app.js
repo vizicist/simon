@@ -103,7 +103,11 @@ const storageKeys = {
 };
 const persistentAchievementFileName = "sigil-sequence-achievements-v3.json";
 const achievementsApiPath = "/api/achievements";
-const quitKioskApiPath = "/api/quit-kiosk";
+const quitKioskApiPaths = [
+  "/api/quit-kiosk",
+  "http://127.0.0.1/api/quit-kiosk",
+];
+const quitKioskApiTimeoutMs = 1200;
 
 localStorage.removeItem("sigil-sequence-achievements");
 localStorage.removeItem("sigil-sequence-achievements-v2");
@@ -1425,28 +1429,51 @@ function getFullscreenElement() {
 }
 
 async function quitKioskMode() {
-  try {
-    const response = await fetch(quitKioskApiPath, { method: "POST", cache: "no-store" });
-    if (response.ok) {
-      const result = await response.json();
-      if (result.ok) {
-        return;
+  await exitBrowserFullscreen();
+
+  for (const apiPath of quitKioskApiPaths) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), quitKioskApiTimeoutMs);
+
+    try {
+      const response = await fetch(apiPath, {
+        method: "POST",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.ok) {
+          return;
+        }
       }
+    } catch {
+      // Static-file mode or a stopped local server cannot quit the browser process.
+    } finally {
+      clearTimeout(timeout);
     }
-  } catch {
-    // Static-file mode cannot quit the browser, but fullscreen can still be released.
+  }
+
+  await exitBrowserFullscreen();
+}
+
+async function exitBrowserFullscreen() {
+  if (!getFullscreenElement()) {
+    return;
   }
 
   const exitFullscreen = document.exitFullscreen
     || document.webkitExitFullscreen
     || document.msExitFullscreen;
 
-  if (getFullscreenElement() && exitFullscreen) {
-    try {
-      await exitFullscreen.call(document);
-    } catch {
-      // The browser may refuse fullscreen exit outside a direct gesture.
-    }
+  if (!exitFullscreen) {
+    return;
+  }
+
+  try {
+    await exitFullscreen.call(document);
+  } catch {
+    // The browser may refuse fullscreen exit outside a direct gesture.
   }
 }
 
