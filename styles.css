@@ -12,7 +12,19 @@
   --ring: #ffffff;
   --pad-surface: #efe8d3;
   --pad-line: #18171c;
+  --font-title: "Burra Regular", Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-previous-body: "Space Mono", ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --word-spacing-expanded: 0.22em;
 }
+
+/*
+  Font experiment rollback notes:
+  - Current experiment: body/default text uses --font-title ("Burra Regular").
+  - Before this global font change, body/default text used --font-previous-body ("Space Mono").
+  - Main page buttons immediately before this global change used --font-title at weight 400.
+  - Before the main-button title-font trial, those buttons inherited Space Mono at weight 700.
+  - Current inter-word spacing is --word-spacing-expanded; set it to normal to undo spacing only.
+*/
 
 @font-face {
   font-family: "Burra Regular";
@@ -53,12 +65,14 @@ body {
   margin: 0;
   background: #113f43;
   color: var(--text);
-  font-family: "Space Mono", ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-family: var(--font-title);
+  word-spacing: var(--word-spacing-expanded);
 }
 
 button,
 select {
   font: inherit;
+  word-spacing: var(--word-spacing-expanded);
 }
 
 .app {
@@ -92,14 +106,14 @@ select {
 }
 
 #pre-game-start {
-  width: min(84dvw, 560px);
+  width: min(92dvw, 900px);
   grid-template-columns: minmax(0, 1fr);
   justify-content: center;
 }
 
 #pre-game-hof {
   grid-row: 4;
-  width: min(84dvw, 560px);
+  width: min(92dvw, 900px);
   grid-template-columns: minmax(0, 1fr);
   justify-content: center;
 }
@@ -134,16 +148,16 @@ select {
 
 h1 {
   margin: 0 0 6px;
-  font-family: "Burra Regular", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-title);
   font-weight: 400;
   max-width: min(100%, calc(100dvw - 48px));
   overflow: hidden;
   font-size: clamp(2rem, 4.8vw, 4.5rem);
-  line-height: 0.95;
+  line-height: 1.08;
   text-align: center;
   text-overflow: clip;
   text-wrap: balance;
-  word-spacing: 0.14em;
+  word-spacing: var(--word-spacing-expanded);
 }
 
 p {
@@ -441,6 +455,8 @@ p {
 #hall-of-fame-challenge,
 #recorded-transmissions,
 #show-hall-of-fame {
+  font-family: var(--font-title);
+  font-weight: 400;
   overflow-wrap: anywhere;
   text-wrap: balance;
 }
@@ -449,7 +465,7 @@ p {
   justify-self: center;
   width: 100%;
   overflow: hidden;
-  font-size: clamp(1rem, 1.72vw, 1.42rem);
+  font-size: clamp(1.5rem, 2.58vw, 2.13rem);
   min-height: clamp(70px, 8.4vh, 86px);
   text-align: center;
 }
@@ -460,8 +476,8 @@ p {
   width: 100%;
   min-height: clamp(70px, 8.4vh, 86px);
   padding: 10px 16px;
-  font-size: clamp(1rem, 1.72vw, 1.42rem);
-  font-weight: 700;
+  font-size: clamp(1.5rem, 2.58vw, 2.13rem);
+  font-weight: 400;
   text-align: center;
 }
 
@@ -1045,7 +1061,7 @@ select {
 
   h1 {
     font-size: 1.55rem;
-    word-spacing: 0.08em;
+    word-spacing: var(--word-spacing-expanded);
   }
 
   .status-bar {
@@ -1077,7 +1093,7 @@ select {
   #show-hall-of-fame {
     justify-self: center;
     min-height: 64px;
-    font-size: clamp(0.92rem, 4vw, 1.08rem);
+    font-size: clamp(1.38rem, 6vw, 1.62rem);
   }
 
   .countdown-message {
