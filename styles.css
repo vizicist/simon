@@ -694,6 +694,22 @@ p {
   padding: clamp(14px, 2.6vw, 26px);
 }
 
+.transmission-sigil-button[data-sigil="chaos"] img {
+  content: url("assets/shapes/white/chaos.svg");
+}
+
+.transmission-sigil-button[data-sigil="oracle"] img {
+  content: url("assets/shapes/white/oracle.svg");
+}
+
+.transmission-sigil-button[data-sigil="directive"] img {
+  content: url("assets/shapes/white/directive.svg");
+}
+
+.transmission-sigil-button[data-sigil="sacred"] img {
+  content: url("assets/shapes/white/sacred.svg");
+}
+
 .transmissions-footer {
   width: min(420px, 100%);
   max-width: 420px;
@@ -793,7 +809,7 @@ p {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.32));
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.38));
 }
 
 .sigil-footer {

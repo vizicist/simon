@@ -53,6 +53,12 @@ class BopPadSimonHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(APP_DIR), **kwargs)
 
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
+
     def translate_path(self, path):
         url_path = unquote(path.split("?", 1)[0].split("#", 1)[0])
         if url_path == MP3S_PATH or url_path.startswith(f"{MP3S_PATH}/"):
@@ -139,7 +145,6 @@ class BopPadSimonHandler(SimpleHTTPRequestHandler):
         self.wfile.write(payload)
 
     def send_api_headers(self):
-        self.send_header("Cache-Control", "no-store")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, PUT, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")

@@ -51,8 +51,15 @@ const achievementEmpty = document.querySelector("#achievement-empty");
 const achievementsCloseButton = document.querySelector("#achievements-close");
 const transmissionsPage = document.querySelector("#transmissions-page");
 const transmissionsCloseButton = document.querySelector("#transmissions-close");
+const transmissionSigilButtons = Array.from(document.querySelectorAll(".transmission-sigil-button"));
 
 const colors = ["green", "red", "yellow", "blue"];
+const whiteTransmissionSigils = {
+  chaos: "assets/shapes/white/chaos.svg",
+  oracle: "assets/shapes/white/oracle.svg",
+  directive: "assets/shapes/white/directive.svg",
+  sacred: "assets/shapes/white/sacred.svg",
+};
 const fallbackSigilMessages = {
   chaos: ["mp3s/chaos-2026-05-09-21.18.04-319920.mp3"],
   oracle: ["mp3s/oracle-2026-05-09-21.18.45-427404.mp3"],
@@ -977,10 +984,22 @@ function hideAdvancedPage() {
 }
 
 function showTransmissionsPage() {
+  useWhiteTransmissionSigils();
   loadAvailableSigilMessages().finally(() => {
+    useWhiteTransmissionSigils();
     selectRandomSigilMessages();
     transmissionsPage.hidden = false;
     enterKioskMode();
+  });
+}
+
+function useWhiteTransmissionSigils() {
+  transmissionSigilButtons.forEach((button) => {
+    const sigil = button.dataset.sigil;
+    const image = button.querySelector("img");
+    if (image && whiteTransmissionSigils[sigil]) {
+      image.src = whiteTransmissionSigils[sigil];
+    }
   });
 }
 

@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $appDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $port = 80
 $hostName = "127.0.0.1"
-$url = "http://$hostName/?v=97"
+$url = "http://$hostName/?v=100"
 $pidFile = Join-Path $appDir ".bop-pad-simon-server.pid"
 $browserPidFile = Join-Path $appDir ".bop-pad-simon-browser.pid"
 $browserProfileDir = Join-Path $appDir ".chrome-kiosk-profile"
@@ -135,7 +135,7 @@ if ($browser) {
   $browserProfileArg = "--user-data-dir=`"$browserProfileDir`""
   $browserProcess = Start-Process `
     -FilePath $browser `
-    -ArgumentList @("--new-window", "--kiosk", $browserProfileArg, $url) `
+    -ArgumentList @("--new-window", "--kiosk", "--disable-http-cache", $browserProfileArg, $url) `
     -PassThru
 
   Set-Content -LiteralPath $browserPidFile -Value $browserProcess.Id
